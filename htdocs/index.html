@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+		<title>Log Activity Prototype</title>
+	</head>
+	<body>
+		<div class="container-fluid" id="submit_view">
+			<h1>Submit Activity</h1>
+			<div class="row-fluid">
+				<ul id="submit_activity_list"></ul>
+			</div>
+			<div class="row-fluid">
+				<a class="btn btn-primary btn-block" id="show_latest">Show latest activities</a>
+			</div>
+		</div>
+		<div class="container-fluid" id="log_view" style="display: none">
+			<h1>Latest Activities</h1>
+			<div class="row-fluid" id="latest_activities_list">
+			</div>
+			<div class="row-fluid">
+				<a class="btn btn-primary btn-block" id="submit_activity">Submit activity</a>
+			</div>
+		</div>
+		<script src="http://code.jquery.com/jquery-latest.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script src="js/app.js"></script>
+	</body>
+</html>
