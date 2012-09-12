@@ -9,8 +9,8 @@ import (
 )
 
 type Activity struct {
-	Id string `json:"id"`
-	Timestamp string `json:"ts"`
+	Id          string `json:"id"`
+	Timestamp   string `json:"ts"`
 	Description string `json:"desc"`
 }
 
