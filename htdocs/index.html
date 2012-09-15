@@ -3,30 +3,53 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="stylesheet" href="css/bootstrap.min.css">
-		<link rel="stylesheet" href="css/bootstrap-responsive.min.css">
-		<title>Log Activity Prototype</title>
+		<link rel="stylesheet" href="css/themes/default/jquery.mobile-1.1.1.min.css">
+		<script src="js/jquery.js"></script>
+		<script src="js/app.js"></script>
+		<script src="js/jquery.mobile-1.1.1.min.js"></script>
+		<title>Activity Log</title>
 	</head>
 	<body>
-		<div class="container-fluid" id="submit_view">
-			<h1>Submit Activity</h1>
-			<div class="row-fluid">
-				<ul id="submit_activity_list"></ul>
+		<div data-role="page" class="type-index" id="login_screen">
+			<div data-role="header">
+				<h1>Login</h1>
 			</div>
-			<div class="row-fluid">
-				<a class="btn btn-primary btn-block" id="show_latest">Show latest activities</a>
-			</div>
-		</div>
-		<div class="container-fluid" id="log_view" style="display: none">
-			<h1>Latest Activities</h1>
-			<div class="row-fluid" id="latest_activities_list">
-			</div>
-			<div class="row-fluid">
-				<a class="btn btn-primary btn-block" id="submit_activity">Submit activity</a>
+			<div data-role="content">
+				<form action="#" method="post">
+					<label for="login">Username:</label>
+					<input type="text" name="username" id="username" value="">
+					<label for="password">Password:</label>
+					<input type="password" name="password" id="password" value="">
+					<a href="" data-role="button" id="signin_btn" data-theme="b">Sign In</a>
+					<a href="" data-role="button">Sign Up</a>
+				</form>
 			</div>
 		</div>
-		<script src="http://code.jquery.com/jquery-latest.js"></script>
-		<script src="js/bootstrap.min.js"></script>
-		<script src="js/app.js"></script>
+		<div data-role="page" class="type-index" id="page_submit">
+			<div data-role="header">
+				<h1>Submit Activity</h1>
+				<a href="#page_submit" data-icon="home" data-iconpos="notext" data-direction="reverse">Home</a>
+			</div>
+			<div data-role="content" id="submit_view">
+				<div id="submit_activity_list" data-role="listview" data-inset="true"></div>
+				<div data-role="footer" data-position="fixed">
+					<a href="#page_list" data-role="button" id="show_latest" data-theme="b">Show latest activities</a>
+				</div>
+			</div>
+		</div>
+		<div data-role="page" class="type-index" id="page_list">
+			<div data-role="header">
+				<h1>Latest Activities</h1>
+				<a href="#page_submit" data-icon="home" data-iconpos="notext" data-direction="reverse">Home</a>
+			</div>
+			<div data-role="content" id="log_view">
+				<div>
+					<ul id="latest_activities_list" data-role="listview"></ul>
+				</div>
+				<div data-role="footer" data-position="fixed">
+					<a href="#page_submit" data-role="button" data-theme="b">Submit activity</a>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>
