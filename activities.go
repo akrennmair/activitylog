@@ -4,6 +4,8 @@ import (
 	"code.google.com/p/gorilla/sessions"
 	"encoding/json"
 	"fmt"
+	"labix.org/v2/mgo"
+	"labix.org/v2/mgo/bson"
 	"log"
 	"net/http"
 	"time"
@@ -13,12 +15,13 @@ type Activity struct {
 	Id          string `json:"id"`
 	Timestamp   string `json:"ts"`
 	Description string `json:"desc"`
+	User        string `json:"-"`
 }
 
 var (
-	activities  map[string][]Activity
-	store       sessions.Store
-	session_key string = "foobar-supersecret"
+	store         sessions.Store
+	session_key   string = "foobar-supersecret"
+	coll_activity *mgo.Collection
 )
 
 const (
@@ -50,7 +53,10 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 	ts := time.Now().Format(time.RFC3339)
 
 	log.Printf("added activity %s (id = %s) for user %s", description, id, username)
-	activities[username] = append([]Activity{{Id: id, Description: description, Timestamp: ts}}, activities[username]...)
+	activity := Activity{Id: id, Description: description, Timestamp: ts, User: username}
+	if err := coll_activity.Insert(&activity); err != nil {
+		log.Printf("c.Insert failed: %v", err)
+	}
 
 	fmt.Fprintf(w, "OK")
 }
@@ -64,16 +70,18 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 
 	username := session.Values["User"].(string)
 
-	max_idx := ActivityLimit
-	if len(activities[username]) < ActivityLimit {
-		max_idx = len(activities[username])
+	var activities []Activity
+	if err := coll_activity.Find(bson.M{"user": username}).Sort("-timestamp", "-_id").Limit(ActivityLimit).All(&activities); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	if json_data, err := json.Marshal(activities[username][0:max_idx]); err == nil {
+	if json_data, err := json.Marshal(activities); err == nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.Write(json_data)
 	} else {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -111,7 +119,6 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-
 	var result AuthResult
 	if VerifyCredentials(username, password) {
 		result.Authenticated = true
@@ -127,7 +134,6 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		result.ErrorMsg = "Authentication failed."
 	}
 
-
 	if json_data, err := json.Marshal(result); err == nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.Write(json_data)
@@ -137,9 +143,15 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	store = sessions.NewCookieStore([]byte(session_key))
+	session, err := mgo.Dial("localhost")
+	if err != nil {
+		log.Fatalf("mgo.Dial: %v", err)
+	}
+	defer session.Close()
 
-	activities = make(map[string][]Activity)
+	coll_activity = session.DB("activitylog").C("activity")
+
+	store = sessions.NewCookieStore([]byte(session_key))
 
 	servemux := http.NewServeMux()
 
