@@ -2,7 +2,7 @@
 function() {
 
 var log_activity = function(id, desc) {
-	console.log('sending activity ' + id);
+	//console.log('sending activity ' + id);
 	$.post('/activity/add', { "id": id, "desc": desc });
 };
 
@@ -19,7 +19,7 @@ var get_latest_activities = function(id) {
 };
 
 var populate_activities = function(id, activities) {
-	console.log("called populate_activities");
+	//console.log("called populate_activities");
 	for (var i=0;i<activities.length;i++) {
 		var btn = $('<a data-role="button"></a>');
 		btn.append(activities[i]);
@@ -43,7 +43,8 @@ $(document).bind('pageinit', function() {
 				$.mobile.changePage('#page_submit');
 				populate_activities('#submit_activity_list', result.activities);
 			} else {
-				$.mobile.changePage('#page_login_error', { transition: "pop", role: "dialog" });
+				$('#popup_error #msg').text(result.errormsg);
+				$.mobile.changePage('#popup_error', { transition: "pop", role: "dialog" });
 			}
 		});
 
