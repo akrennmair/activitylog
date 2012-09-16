@@ -55,12 +55,64 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type AuthResult struct {
+	Authenticated bool     `json:"authenticated"`
+	ErrorMsg      string   `json:"errormsg,omitempty"`
+	Activities    []string `json:"activities,omitempty"`
+}
+
+func VerifyCredentials(username, password string) bool {
+	users := map[string]string{
+		"ak":  "foobar",
+		"foo": "quux",
+	}
+
+	for u, p := range users {
+		if u == username && p == password {
+			return true
+		}
+	}
+
+	return false
+}
+
+func Authenticate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
+	}
+
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	var result AuthResult
+	if VerifyCredentials(username, password) {
+		result.Authenticated = true
+		result.Activities = []string{"Eat", "Sleep", "Drink", "Shopping"}
+	} else {
+		result.Authenticated = false
+		result.ErrorMsg = "Authentication failed"
+	}
+
+	if json_data, err := json.Marshal(result); err == nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(json_data)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func main() {
 	activities = []Activity{}
 
 	servemux := http.NewServeMux()
 
 	servemux.Handle("/", http.FileServer(http.Dir("htdocs")))
+	servemux.Handle("/auth", http.HandlerFunc(Authenticate))
 	servemux.Handle("/activity/add", http.HandlerFunc(AddActivity))
 	servemux.Handle("/activity/latest", http.HandlerFunc(LatestActivities))
 

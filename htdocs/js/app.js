@@ -1,11 +1,9 @@
 (
 function() {
 
-var activities = [ 'Eat', 'Sleep', 'Drink', 'Shopping' ];
-
-var log_activity = function(id) {
+var log_activity = function(id, desc) {
 	console.log('sending activity ' + id);
-	$.post('/activity/add', { "id": id, "desc": activities[id] });
+	$.post('/activity/add', { "id": id, "desc": desc });
 };
 
 var get_latest_activities = function(id) {
@@ -21,14 +19,15 @@ var get_latest_activities = function(id) {
 };
 
 var populate_activities = function(id, activities) {
+	console.log("called populate_activities");
 	for (var i=0;i<activities.length;i++) {
 		var btn = $('<a data-role="button"></a>');
 		btn.append(activities[i]);
-		btn.click((function(id) {
+		btn.click((function(id, desc) {
 			return function() {
-				log_activity(id);
+				log_activity(id, desc);
 			}
-		})(i));
+		})(i, activities[i]));
 		$(id).append(btn);
 	}
 	$(id).listview("refresh").trigger('create');
@@ -36,8 +35,18 @@ var populate_activities = function(id, activities) {
 
 $(document).bind('pageinit', function() {
 	$('#signin_btn').click(function() {
-		$.mobile.changePage('#page_submit');
-		populate_activities('#submit_activity_list', activities);
+		var username = $('#username').val();
+		var password = $('#password').val();
+
+		$.post('/auth', { username: username, password: password }, function(result) {
+			if (result.authenticated == true) {
+				$.mobile.changePage('#page_submit');
+				populate_activities('#submit_activity_list', result.activities);
+			} else {
+				$.mobile.changePage('#page_login_error', { transition: "pop", role: "dialog" });
+			}
+		});
+
 	});
 
 	$('#show_latest').click(function() {

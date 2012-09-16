@@ -10,13 +10,14 @@
 		<title>Activity Log</title>
 	</head>
 	<body>
+		<!-- login screen -->
 		<div data-role="page" class="type-index" id="login_screen">
 			<div data-role="header">
 				<h1>Login</h1>
 			</div>
 			<div data-role="content">
 				<form action="#" method="post">
-					<label for="login">Username:</label>
+					<label for="username">Username:</label>
 					<input type="text" name="username" id="username" value="">
 					<label for="password">Password:</label>
 					<input type="password" name="password" id="password" value="">
@@ -25,6 +26,19 @@
 				</form>
 			</div>
 		</div>
+
+		<!-- login error popup -->
+		<div data-role="page" id="page_login_error">
+			<div data-role="header">
+				<h1>Error</h1>
+			</div>
+			<div data-role="content">
+				<p>Authentication failed.</p>
+				<p><a href="#login_screen" data-role="button" data-rel="back" data-inline="true" data-icon="back">Back to Login</a></p>
+			</div>
+		</div>
+
+		<!-- activity submit page -->
 		<div data-role="page" class="type-index" id="page_submit">
 			<div data-role="header">
 				<h1>Submit Activity</h1>
@@ -37,6 +51,8 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- activity list page -->
 		<div data-role="page" class="type-index" id="page_list">
 			<div data-role="header">
 				<h1>Latest Activities</h1>
@@ -51,5 +67,6 @@
 				</div>
 			</div>
 		</div>
+
 	</body>
 </html>
