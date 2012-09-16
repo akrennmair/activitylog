@@ -1,6 +1,17 @@
 (
 function() {
 
+var PageVars = { };
+
+$(document).bind("pagebeforechange", function(event, data) {
+	if (typeof data.toPage == 'object' && data.toPage.attr('data-needs-auth') == 'true') {
+		if (!PageVars.authenticated) {
+			event.preventDefault();
+			$.mobile.changePage('#login_screen');
+		}
+	}
+});
+
 var log_activity = function(id, desc) {
 	//console.log('sending activity ' + id);
 	$.post('/activity/add', { "id": id, "desc": desc });
@@ -9,6 +20,9 @@ var log_activity = function(id, desc) {
 var get_latest_activities = function(id) {
 	$.get('/activity/latest', null, function(activities) {
 		$('#latest_activities_list li').remove();
+		if (activities == null) {
+			return;
+		}
 		for (var i=0;i<activities.length;i++) {
 			var list_entry = $('<li></li>');
 			list_entry.append(activities[i].ts + ': ' + activities[i].desc);
@@ -40,6 +54,7 @@ $(document).bind('pageinit', function() {
 
 		$.post('/auth', { username: username, password: password }, function(result) {
 			if (result.authenticated == true) {
+				PageVars.authenticated = true;
 				$.mobile.changePage('#page_submit');
 				populate_activities('#submit_activity_list', result.activities);
 			} else {
