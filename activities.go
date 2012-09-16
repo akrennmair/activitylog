@@ -36,7 +36,7 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, _ := store.Get(r, SESSION_NAME)
-	if !(session.Values["Authenticated"].(bool)) {
+	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
 		http.Error(w, "unauthenticated", http.StatusForbidden)
 		return
 	}
@@ -63,7 +63,7 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 
 func LatestActivities(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, SESSION_NAME)
-	if !(session.Values["Authenticated"].(bool)) {
+	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
 		http.Error(w, "unauthenticated", http.StatusForbidden)
 		return
 	}
