@@ -22,7 +22,7 @@
 					<label for="password">Password:</label>
 					<input type="password" name="password" id="password" value="">
 					<a href="" data-role="button" id="signin_btn" data-theme="b">Sign In</a>
-					<a href="" data-role="button">Sign Up</a>
+					<a href="#signup_screen" data-role="button">Sign Up</a>
 				</form>
 			</div>
 		</div>
@@ -35,6 +35,25 @@
 			<div data-role="content">
 				<p id="msg"></p>
 				<p><a data-role="button" data-rel="back" data-inline="true" data-icon="back">OK</a></p>
+			</div>
+		</div>
+
+		<!-- signup screen -->
+		<div data-role="page" class="type-index" id="signup_screen">
+			<div data-role="header">
+				<h1>Login</h1>
+			</div>
+			<div data-role="content">
+				<form action="#" method="post">
+					<label for="username">Username:</label>
+					<input type="text" name="username" id="username" value="">
+					<label for="password">Password:</label>
+					<input type="password" name="password1" id="password1" value="">
+					<label for="password">Password (again):</label>
+					<input type="password" name="password2" id="password2" value="">
+					<a href="#" data-role="button" id="signup_btn" data-theme="b">Sign Up</a>
+					<a href="#login_screen" data-role="button">Back to Login</a>
+				</form>
 			</div>
 		</div>
 

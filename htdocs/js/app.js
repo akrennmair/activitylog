@@ -47,10 +47,10 @@ var populate_activities = function(id, activities) {
 	$(id).listview("refresh").trigger('create');
 };
 
-$(document).bind('pageinit', function() {
+$(document).ready(function() {
 	$('#signin_btn').click(function() {
-		var username = $('#username').val();
-		var password = $('#password').val();
+		var username = $('#login_screen #username').val();
+		var password = $('#login_screen #password').val();
 
 		$.post('/auth', { username: username, password: password }, function(result) {
 			if (result.authenticated == true) {
@@ -67,6 +67,33 @@ $(document).bind('pageinit', function() {
 
 	$('#show_latest').click(function() {
 		get_latest_activities('#latest_activities_list');
+	});
+
+	$('#signup_btn').click(function() {
+		var username = $('#signup_screen #username').val();
+		var password1 = $('#signup_screen #password1').val();
+		var password2 = $('#signup_screen #password2').val();
+
+		if (password1 != password2) {
+			$('#popup_error #msg').text("Passwords do not match.");
+			$.mobile.changePage('#popup_error', { transition: "pop", role: "dialog" });
+			return;
+		}
+
+		if (password1.length == 0) {
+			$('#popup_error #msg').text("Password is empty.");
+			$.mobile.changePage('#popup_error', { transition: "pop", role: "dialog" });
+			return;
+		}
+
+		$.post('/auth/signup', { "username": username, "password": password1 }, function(result) {
+			if (result.authenticated == true) {
+				$.mobile.changePage('#login_screen');
+			} else {
+				$('#popup_error #msg').text(result.errormsg);
+				$.mobile.changePage('#popup_error', { transition: "pop", role: "dialog" });
+			}
+		});
 	});
 
 });

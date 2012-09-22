@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"code.google.com/p/go.crypto/pbkdf2"
 	"code.google.com/p/gorilla/sessions"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"labix.org/v2/mgo"
@@ -19,14 +23,19 @@ type Activity struct {
 }
 
 var (
-	store         sessions.Store
-	session_key   string = "foobar-supersecret"
-	coll_activity *mgo.Collection
+	store       sessions.Store
+	session_key string = "foobar-supersecret"
+	db          *mgo.Database
 )
 
 const (
 	ActivityLimit = 10
 	SESSION_NAME  = "activities-session"
+	COLL_ACTIVITY = "activity"
+	COLL_USERS    = "users"
+	DB_NAME       = "activitylog"
+	PBKDF2_ROUNDS = 10000
+	PBKDF2_SIZE   = 32
 )
 
 func AddActivity(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +63,7 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("added activity %s (id = %s) for user %s", description, id, username)
 	activity := Activity{Id: id, Description: description, Timestamp: ts, User: username}
-	if err := coll_activity.Insert(&activity); err != nil {
+	if err := db.C(COLL_ACTIVITY).Insert(&activity); err != nil {
 		log.Printf("c.Insert failed: %v", err)
 	}
 
@@ -71,7 +80,7 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 	username := session.Values["User"].(string)
 
 	var activities []Activity
-	if err := coll_activity.Find(bson.M{"user": username}).Sort("-timestamp", "-_id").Limit(ActivityLimit).All(&activities); err != nil {
+	if err := db.C(COLL_ACTIVITY).Find(bson.M{"user": username}).Sort("-timestamp", "-_id").Limit(ActivityLimit).All(&activities); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -92,18 +101,74 @@ type AuthResult struct {
 }
 
 func VerifyCredentials(username, password string) bool {
-	users := map[string]string{
-		"ak":  "foobar",
-		"foo": "quux",
+	var user User
+	if err := db.C(COLL_USERS).Find(bson.M{"_id": username}).One(&user); err != nil {
+		log.Printf("finding user %s failed: %v", username, err)
+		return false
 	}
 
-	for u, p := range users {
-		if u == username && p == password {
-			return true
-		}
+	password_hash := pbkdf2.Key([]byte(password), user.Salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
+
+	return bytes.Equal(password_hash, user.Password)
+}
+
+func GenerateSalt() (data []byte, err error) {
+	data = make([]byte, 8)
+	_, err = rand.Read(data)
+	return
+}
+
+type User struct {
+	Id       string `_id`
+	Password []byte
+	Salt     []byte
+}
+
+func RegisterUser(username, password string) error {
+	salt, err := GenerateSalt()
+	if err != nil {
+		return err
 	}
 
-	return false
+	password_hash := pbkdf2.Key([]byte(password), salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
+
+	new_user := &User{Id: username, Password: password_hash, Salt: salt}
+	if err = db.C(COLL_USERS).Insert(&new_user); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Signup(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
+		return
+	}
+
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	var result AuthResult
+
+	if err := RegisterUser(username, password); err != nil {
+		result.Authenticated = false
+		result.ErrorMsg = err.Error()
+	} else {
+		result.Authenticated = true
+	}
+
+	if json_data, err := json.Marshal(result); err == nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(json_data)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
@@ -114,6 +179,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
+		return
 	}
 
 	username := r.FormValue("username")
@@ -149,7 +215,7 @@ func main() {
 	}
 	defer session.Close()
 
-	coll_activity = session.DB("activitylog").C("activity")
+	db = session.DB(DB_NAME)
 
 	store = sessions.NewCookieStore([]byte(session_key))
 
@@ -157,6 +223,7 @@ func main() {
 
 	servemux.Handle("/", http.FileServer(http.Dir("htdocs")))
 	servemux.Handle("/auth", http.HandlerFunc(Authenticate))
+	servemux.Handle("/auth/signup", http.HandlerFunc(Signup))
 	servemux.Handle("/activity/add", http.HandlerFunc(AddActivity))
 	servemux.Handle("/activity/latest", http.HandlerFunc(LatestActivities))
 
