@@ -12,9 +12,10 @@ $(document).bind("pagebeforechange", function(event, data) {
 	}
 });
 
-var log_activity = function(id, desc) {
-	//console.log('sending activity ' + id);
-	$.post('/activity/add', { "id": id, "desc": desc });
+var goto_submit_page = function(id, desc) {
+	PageVars.activity_id = id;
+	$('#submit_detail_view #description').val(desc);
+	$.mobile.changePage('#page_submit_detail');
 };
 
 var get_latest_activities = function(id) {
@@ -39,7 +40,7 @@ var populate_activities = function(id, activities) {
 		btn.append(activities[i]);
 		btn.click((function(id, desc) {
 			return function() {
-				log_activity(id, desc);
+				goto_submit_page(id, desc);
 			}
 		})(i, activities[i]));
 		$(id).append(btn);
@@ -62,7 +63,6 @@ $(document).ready(function() {
 				$.mobile.changePage('#popup_error', { transition: "pop", role: "dialog" });
 			}
 		});
-
 	});
 
 	$('#show_latest').click(function() {
@@ -96,6 +96,13 @@ $(document).ready(function() {
 		});
 	});
 
+	$('#submit_activity_btn').click(function() {
+		var id = PageVars.activity_id;
+		var desc = $('#submit_detail_view #description').val();
+		$.post('/activity/add', { "id": id, "desc": desc }, function() {
+			$.mobile.changePage('#page_submit');
+		});
+	});
 });
 
 })();
