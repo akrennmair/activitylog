@@ -13,7 +13,7 @@ $(document).bind("pagebeforechange", function(event, data) {
 });
 
 var goto_submit_page = function(id, desc) {
-	PageVars.activity_id = id;
+	PageVars.type_id = id;
 	$('#submit_detail_view #description').val(desc);
 	$.mobile.changePage('#page_submit_detail');
 };
@@ -33,17 +33,19 @@ var get_latest_activities = function(id) {
 	});
 };
 
+var add_activity_btn = function(list_id, id, desc) {
+	var btn = $('<a data-role="button" data-icon="arrow-r" data-iconpos="right"></a>');
+	btn.text(desc);
+	btn.click(function() {
+		goto_submit_page(id, desc);
+	});
+	$(list_id).append(btn);
+};
+
 var populate_activities = function(id, activities) {
 	//console.log("called populate_activities");
 	for (var i=0;i<activities.length;i++) {
-		var btn = $('<a data-role="button"></a>');
-		btn.append(activities[i]);
-		btn.click((function(id, desc) {
-			return function() {
-				goto_submit_page(id, desc);
-			}
-		})(i, activities[i]));
-		$(id).append(btn);
+		add_activity_btn(id, i, activities[i]);
 	}
 	$(id).listview("refresh").trigger('create');
 };
@@ -97,9 +99,18 @@ $(document).ready(function() {
 	});
 
 	$('#submit_activity_btn').click(function() {
-		var id = PageVars.activity_id;
+		var type_id = PageVars.type_id;
 		var desc = $('#submit_detail_view #description').val();
-		$.post('/activity/add', { "id": id, "desc": desc }, function() {
+		$.post('/activity/add', { "type_id": type_id, "desc": desc }, function() {
+			$.mobile.changePage('#page_submit');
+		});
+	});
+
+	$('#add_activity_type_btn').click(function() {
+		var typename = $('#activity_add_view #typename').val();
+		$.post('/activity/type/add', { "typename": typename }, function(result) {
+			add_activity_btn('#submit_activity_list', result.type_id, typename);
+			$('#submit_activity_list').listview("refresh").trigger('create');
 			$.mobile.changePage('#page_submit');
 		});
 	});
