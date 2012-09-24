@@ -2,48 +2,43 @@ package main
 
 import (
 	"bytes"
+	_ "code.google.com/p/go-mysql-driver/mysql"
 	"code.google.com/p/go.crypto/pbkdf2"
 	"code.google.com/p/gorilla/sessions"
 	"crypto/rand"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	goconf "github.com/akrennmair/goconf"
 	"log"
 	"net/http"
-	"time"
+	"os"
 )
 
 type Activity struct {
-	TypeId      string `json:"type_id" bson:"type_id"`
+	TypeId      int64  `json:"type_id"`
 	Timestamp   string `json:"ts"`
 	Description string `json:"desc"`
-	User        string `json:"-"`
 }
 
 var (
-	store       sessions.Store
-	session_key string = "foobar-supersecret"
-	db          *mgo.Database
+	store sessions.Store
+	db    *sql.DB
 )
 
 const (
-	ActivityLimit      = 10
-	SESSION_NAME       = "activities-session"
-	COLL_ACTIVITY      = "activity"
-	COLL_USERS         = "users"
-	COLL_ACTIVITY_TYPE = "activity_types"
-	DB_NAME            = "activitylog"
-	PBKDF2_ROUNDS      = 10000
-	PBKDF2_SIZE        = 32
+	ActivityLimit = 10
+	SESSION_NAME  = "activities-session"
+	DB_NAME       = "activitylog"
+	PBKDF2_ROUNDS = 10000
+	PBKDF2_SIZE   = 32
 )
 
 type ActivityType struct {
-	_Id  bson.ObjectId `bson:"_id" json:"-"`
-	Id   string        `json:"type_id" bson:"-"`
-	Name string        `json:"name"`
-	User string        `json:"user,omitempty"`
+	Id   int64  `json:"type_id"`
+	Name string `json:"name"`
 }
 
 func AddActivityType(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +53,7 @@ func AddActivityType(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username := session.Values["User"].(string)
+	user_id := session.Values["UserId"].(int64)
 
 	if err := r.ParseForm(); err != nil {
 		log.Printf("r.ParseForm failed: %v", err)
@@ -68,20 +63,17 @@ func AddActivityType(w http.ResponseWriter, r *http.Request) {
 
 	typename := r.FormValue("typename")
 
-
-	object_id := bson.NewObjectId()
-	activity_type := bson.M{"_id": object_id, "name": typename, "user": username}
-	if err := db.C(COLL_ACTIVITY_TYPE).Insert(&activity_type); err != nil {
-		log.Printf("c.Insert failed: %v", err)
+	result, err := db.Exec("INSERT INTO activity_types (name, user_id, active) VALUES (?, ?, 1)", typename, user_id)
+	if err != nil {
+		log.Printf("db.Exec failed: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	activity_type_json := ActivityType{Id: object_id.Hex(), Name: typename, User: username}
+	activity_type := ActivityType{Name: typename}
+	activity_type.Id, _ = result.LastInsertId()
 
-	log.Printf("activity_type after insert: %#v", activity_type_json)
-
-	if json_data, err := json.Marshal(activity_type_json); err == nil {
+	if json_data, err := json.Marshal(activity_type); err == nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.Write(json_data)
 	} else {
@@ -102,7 +94,8 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username := session.Values["User"].(string)
+	username := session.Values["UserName"].(string)
+	user_id := session.Values["UserId"].(int64)
 
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
@@ -111,12 +104,11 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 
 	type_id := r.FormValue("type_id")
 	description := r.FormValue("desc")
-	ts := time.Now().Format(time.RFC3339)
 
-	log.Printf("added activity %s (type_id = %s) for user %s", description, type_id, username)
-	activity := Activity{TypeId: type_id, Description: description, Timestamp: ts, User: username}
-	if err := db.C(COLL_ACTIVITY).Insert(&activity); err != nil {
-		log.Printf("c.Insert failed: %v", err)
+	if _, err := db.Exec("INSERT INTO activities (type_id, timestamp, description, user_id) VALUES (?, NOW(), ?, ?)", type_id, description, user_id); err != nil {
+		log.Printf("AddActivity: db.Exec failed: %v", err)
+	} else {
+		log.Printf("added activity %s (type_id = %s) for user %s", description, type_id, username)
 	}
 
 	fmt.Fprintf(w, "OK")
@@ -129,12 +121,25 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username := session.Values["User"].(string)
+	user_id := session.Values["UserId"].(int64)
 
-	var activities []Activity
-	if err := db.C(COLL_ACTIVITY).Find(bson.M{"user": username}).Sort("-timestamp", "-_id").Limit(ActivityLimit).All(&activities); err != nil {
+	rows, err := db.Query("SELECT type_id, timestamp, description FROM activities WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?", user_id, ActivityLimit)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	activities := []Activity{}
+
+	for rows.Next() {
+		var type_id int64
+		var timestamp string
+		var description string
+		if err = rows.Scan(&type_id, &timestamp, &description); err == nil {
+			activities = append(activities, Activity{TypeId: type_id, Timestamp: timestamp, Description: description})
+		} else {
+			log.Printf("rows.Scan failed: %v", err)
+		}
 	}
 
 	if json_data, err := json.Marshal(activities); err == nil {
@@ -152,16 +157,19 @@ type AuthResult struct {
 	Activities    []ActivityType `json:"activities,omitempty"`
 }
 
-func VerifyCredentials(username, password string) bool {
-	var user User
-	if err := db.C(COLL_USERS).Find(bson.M{"_id": username}).One(&user); err != nil {
-		log.Printf("finding user %s failed: %v", username, err)
-		return false
+func VerifyCredentials(username, password string) (user_id int64, authenticated bool) {
+	row := db.QueryRow("SELECT id, pwhash, salt FROM users WHERE login = ? LIMIT 1", username)
+	var db_hash []byte
+	var salt []byte
+
+	if err := row.Scan(&user_id, &db_hash, &salt); err != nil {
+		log.Printf("VerifyCredentials: %v", err)
+		return 0, false
 	}
 
-	password_hash := pbkdf2.Key([]byte(password), user.Salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
+	password_hash := pbkdf2.Key([]byte(password), salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
 
-	return bytes.Equal(password_hash, user.Password)
+	return user_id, bytes.Equal(password_hash, db_hash)
 }
 
 func GenerateSalt() (data []byte, err error) {
@@ -184,12 +192,12 @@ func RegisterUser(username, password string) error {
 
 	password_hash := pbkdf2.Key([]byte(password), salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
 
-	new_user := &User{Id: username, Password: password_hash, Salt: salt}
-	if err = db.C(COLL_USERS).Insert(&new_user); err != nil {
-		return err
+	_, err = db.Exec("INSERT INTO users (login, pwhash, salt) VALUES (?, ?, ?)", username, password_hash, salt)
+	if err != nil {
+		log.Printf("RegisterUser: %v", err)
 	}
 
-	return nil
+	return err
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
@@ -238,21 +246,28 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	var result AuthResult
-	if VerifyCredentials(username, password) {
+	if user_id, ok := VerifyCredentials(username, password); ok {
 		result.Authenticated = true
 
-		if err := db.C(COLL_ACTIVITY_TYPE).Find(bson.M{"user": username}).All(&result.Activities); err != nil {
-			log.Printf("Find failed: %v", err)
+		rows, err := db.Query("SELECT id, name FROM activity_types WHERE user_id = ? AND active = 1", user_id)
+		if err != nil {
+			log.Printf("db.Query failed: %v", err)
 		}
 
-		for i, _ := range result.Activities {
-			result.Activities[i].Id = result.Activities[i]._Id.Hex()
+		result.Activities = []ActivityType{}
+		for rows.Next() {
+			var type_id int64
+			var name string
+			if err = rows.Scan(&type_id, &name); err == nil {
+				result.Activities = append(result.Activities, ActivityType{Id: type_id, Name: name})
+			}
 		}
 
 		// create new session and store that authentication was successful
 		session, _ := store.Get(r, SESSION_NAME)
 		session.Values["Authenticated"] = true
-		session.Values["User"] = username
+		session.Values["UserName"] = username
+		session.Values["UserId"] = user_id
 		session.Save(r, w)
 	} else {
 		result.Authenticated = false
@@ -268,15 +283,29 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	session, err := mgo.Dial("localhost")
-	if err != nil {
-		log.Fatalf("mgo.Dial: %v", err)
+	var cfgfile *string = flag.String("config", "", "configuration file")
+	flag.Parse()
+
+	if *cfgfile == "" {
+		flag.Usage()
+		os.Exit(1)
 	}
-	defer session.Close()
 
-	db = session.DB(DB_NAME)
+	cfg, err := goconf.ReadConfigFile(*cfgfile)
 
-	store = sessions.NewCookieStore([]byte(session_key))
+	// TODO: add error handling
+	driver, _ := cfg.GetString("database", "driver")
+	dsn, _ := cfg.GetString("database", "dsn")
+	auth_key, _ := cfg.GetString("sessions", "authkey")
+	enc_key, _ := cfg.GetString("sessions", "enckey")
+
+	db, err = sql.Open(driver, dsn)
+	if err != nil {
+		log.Fatalf("sql.Open: %v", err)
+	}
+	defer db.Close()
+
+	store = sessions.NewCookieStore([]byte(auth_key), []byte(enc_key))
 
 	servemux := http.NewServeMux()
 

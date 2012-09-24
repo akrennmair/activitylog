@@ -1,0 +1,9 @@
+[database]
+driver = mysql
+dsn = username:password@tcp(dbhost:3306)/dbname?charset=utf8&keepalive=30
+
+[sessions]
+# authkey should be 32 or 64 bytes
+authkey = ac5IethucooShee7OhthohC2Mae2aZah
+# enckey _MUST_ be 16, 32 or 64 bytes long
+enckey = Xeegech5sejoaH2o
