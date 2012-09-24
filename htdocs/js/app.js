@@ -43,9 +43,8 @@ var add_activity_btn = function(list_id, id, desc) {
 };
 
 var populate_activities = function(id, activities) {
-	//console.log("called populate_activities");
 	for (var i=0;i<activities.length;i++) {
-		add_activity_btn(id, i, activities[i]);
+		add_activity_btn(id, activities[i].type_id, activities[i].name);
 	}
 	$(id).listview("refresh").trigger('create');
 };

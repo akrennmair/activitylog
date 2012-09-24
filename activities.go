@@ -40,7 +40,7 @@ const (
 )
 
 type ActivityType struct {
-	//_Id  bson.ObjectId `bson:"_id" json:"-"`
+	_Id  bson.ObjectId `bson:"_id" json:"-"`
 	Id   string        `json:"type_id" bson:"-"`
 	Name string        `json:"name"`
 	User string        `json:"user,omitempty"`
@@ -147,9 +147,9 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 }
 
 type AuthResult struct {
-	Authenticated bool     `json:"authenticated"`
-	ErrorMsg      string   `json:"errormsg,omitempty"`
-	Activities    []string `json:"activities,omitempty"`
+	Authenticated bool           `json:"authenticated"`
+	ErrorMsg      string         `json:"errormsg,omitempty"`
+	Activities    []ActivityType `json:"activities,omitempty"`
 }
 
 func VerifyCredentials(username, password string) bool {
@@ -240,7 +240,14 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	var result AuthResult
 	if VerifyCredentials(username, password) {
 		result.Authenticated = true
-		result.Activities = []string{"Eat", "Sleep", "Drink", "Shopping"}
+
+		if err := db.C(COLL_ACTIVITY_TYPE).Find(bson.M{"user": username}).All(&result.Activities); err != nil {
+			log.Printf("Find failed: %v", err)
+		}
+
+		for i, _ := range result.Activities {
+			result.Activities[i].Id = result.Activities[i]._Id.Hex()
+		}
 
 		// create new session and store that authentication was successful
 		session, _ := store.Get(r, SESSION_NAME)
