@@ -110,6 +110,7 @@ $(document).ready(function() {
 		$.post('/activity/type/add', { "typename": typename }, function(result) {
 			add_activity_btn('#submit_activity_list', result.type_id, typename);
 			$('#submit_activity_list').listview("refresh").trigger('create');
+			$('#activity_add_view #typename').val("");
 			$.mobile.changePage('#page_submit');
 		});
 	});
