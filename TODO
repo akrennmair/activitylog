@@ -1,0 +1,18 @@
+an unordered TODO list
+======================
+
+- provide feeds of the most recent activities by user.
+- in the Submit Activity dialog, add a checkbox "public activity". only public activities are shown in the feeds.
+- in the Submit Activity dialog, add a checkbox "track location". when checked, the current location is saved (if available).
+- make type of activity configurable. configurable aspects are:
+	- activity is a point in time vs. activity has a start and end timestamp.
+	- activity can be rated
+	- activity contains a numeric value (e.g. number of calories, weight of poo, current heart rate, etc.)
+- the mobile user interface shall detect when it's offline, and store its data in localstorage until it is online again. when online, sync with server.
+- provide a mobile UI and a web UI. 
+	- the mobile UI shall allow basic configuration of activity types, add activities and viewing recent activities.
+	- the web UI shall provide the whole experience: full configuration, adding activities, and detailed views of activities including stats, graphs, etc.
+
+- social interface: users can follow each other and see their public activities
+
+- provide an API for external applications to post events. This is useful for integrating external services and devices.
