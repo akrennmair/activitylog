@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type Activity struct {
@@ -104,8 +105,28 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 
 	type_id := r.FormValue("type_id")
 	description := r.FormValue("desc")
+	is_public := 0
+	if r.FormValue("public") == "on" {
+		is_public = 1
+	}
 
-	if _, err := db.Exec("INSERT INTO activities (type_id, timestamp, description, user_id) VALUES (?, NOW(), ?, ?)", type_id, description, user_id); err != nil {
+	var err error
+	var latitude sql.NullFloat64
+	var longitude sql.NullFloat64
+
+	if latitude.Float64, err = strconv.ParseFloat(r.FormValue("lat"), 64); err != nil {
+		latitude.Valid = false
+	} else {
+		latitude.Valid = true
+	}
+
+	if longitude.Float64, err = strconv.ParseFloat(r.FormValue("long"), 64); err != nil {
+		longitude.Valid = false
+	} else {
+		longitude.Valid = true
+	}
+
+	if _, err := db.Exec("INSERT INTO activities (type_id, timestamp, description, user_id, public, latitude, longitude) VALUES (?, NOW(), ?, ?, ?, ?, ?)", type_id, description, user_id, is_public, latitude, longitude); err != nil {
 		log.Printf("AddActivity: db.Exec failed: %v", err)
 	} else {
 		log.Printf("added activity %s (type_id = %s) for user %s", description, type_id, username)

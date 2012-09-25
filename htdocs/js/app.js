@@ -97,12 +97,28 @@ $(document).ready(function() {
 		});
 	});
 
+	var add_activity = function(data, f) {
+		$.post('/activity/add', data, function() {
+			$.mobile.changePage('#page_submit');
+		});
+	};
+
 	$('#submit_activity_btn').click(function() {
 		var type_id = PageVars.type_id;
 		var desc = $('#submit_detail_view #description').val();
-		$.post('/activity/add', { "type_id": type_id, "desc": desc }, function() {
-			$.mobile.changePage('#page_submit');
-		});
+		var is_public = $('#submit_detail_view #public').val();
+		var recordloc = $('#submit_detail_view #recordloc').val();
+		if (recordloc == "on") {
+			if ("geolocation" in navigator) {
+				navigator.geolocation.getCurrentPosition(function(position) {
+					add_activity({ "type_id": type_id, "desc": desc, "public": is_public, 'lat': position.coords.latitude, 'long': position.coords.longitude });
+				});
+			} else {
+				add_activity({ "type_id": type_id, "desc": desc, "public": is_public });
+			}
+		} else {
+			add_activity({ "type_id": type_id, "desc": desc, "public": is_public });
+		}
 	});
 
 	$('#add_activity_type_btn').click(function() {
