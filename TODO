@@ -12,6 +12,7 @@ an unordered TODO list
 - provide a mobile UI and a web UI. 
 	- the mobile UI shall allow basic configuration of activity types, add activities and viewing recent activities.
 	- the web UI shall provide the whole experience: full configuration, adding activities, and detailed views of activities including stats, graphs, etc.
+- implement CSRF protection
 
 - social interface: users can follow each other and see their public activities
 
