@@ -229,7 +229,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	r.Body.Close()
 
-	session, _ := store.Get(req, SESSION_NAME)
+	session, _ := store.Get(r, SESSION_NAME)
 	delete(session.Values, "Authenticated")
 	delete(session.Values, "UserName")
 	delete(session.Values, "UserId")
