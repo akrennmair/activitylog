@@ -221,6 +221,23 @@ func RegisterUser(username, password string) error {
 	return err
 }
 
+func Logout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	r.Body.Close()
+
+	session, _ := store.Get(req, SESSION_NAME)
+	delete(session.Values, "Authenticated")
+	delete(session.Values, "UserName")
+	delete(session.Values, "UserId")
+	session.Save(r, w)
+
+	fmt.Fprintf(w, "OK")
+}
+
 func Signup(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
@@ -333,6 +350,7 @@ func main() {
 	servemux.Handle("/", http.FileServer(http.Dir("htdocs")))
 	servemux.Handle("/auth", http.HandlerFunc(Authenticate))
 	servemux.Handle("/auth/signup", http.HandlerFunc(Signup))
+	servemux.Handle("/auth/logout", http.HandlerFunc(Logout))
 	servemux.Handle("/activity/add", http.HandlerFunc(AddActivity))
 	servemux.Handle("/activity/latest", http.HandlerFunc(LatestActivities))
 	servemux.Handle("/activity/type/add", http.HandlerFunc(AddActivityType))

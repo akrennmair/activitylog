@@ -19,6 +19,7 @@
 		</script>
 		<script src="/js/jquery.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
+		<script src="/js/app.js"></script>
 		<title>Activity Log</title>
 	</head>
 	<body>
@@ -39,16 +40,39 @@
 							<li><a href="/m/">Mobile Version</a></li>
 						</ul>
 					</div>
-					<form class="navbar-form pull-right">
-						<input name="login" id="login" type="text" placeholder="Login" class="span2">
+					<div class="pull-right" id="logged_in_form" style="display: none">
+						<!-- TODO: show username somewhere here -->
+						<div><button class="btn" id="btn_logout">Logout</button></div>
+					</div>
+					<form class="navbar-form pull-right" id="login_form">
+						<input name="login" id="username" type="text" placeholder="Username" class="span2">
 						<input name="password" id="password" type="password" placeholder="Password" class="span2">
-						<button class="btn btn-primary">Sign in</button>
+						<button class="btn btn-primary" id="btn_signin">Sign in</button>
 						<a class="btn btn-success" href="#">Sign Up</a>
 					</form>
 				</div>
 			</div>
 		</div>
-		<div class="container-fluid">
+		<div class="container_fluid" id="login_page">
+			<div class="row-fluid">
+				<div class="offset3 span6">
+					<div class="hero-unit">
+						<div>
+							<h1>
+								Hello, world!
+							</h1>
+							<p>
+								TODO: here should be a description about the service.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row-fluid">
+				TODO: here should be a list of the latest public activities of all users
+			</div>
+		</div>
+		<div class="container-fluid" id="main_page" style="display: none">
 			<div class="row-fluid">
 				<div class="span3">
 					<div class="well sidebar-nav">
@@ -62,21 +86,7 @@
 					</div>
 				</div>
 				<div class="span9">
-					<div class="hero-unit">
-						<div>
-							<h1>
-								Hello, world!
-							</h1>
-							<p>
-								This is a template for a simple marketing or informational website. It
-								includes a large callout called the hero unit and three supporting pieces
-								of content. Use it as a starting point to create something more unique.
-							</p>
-						</div>
-						<a class="btn btn-primary" href="#">
-							Learn more »
-						</a>
-					</div>
+					TODO: here should be some content of the user himself
 				</div>
 			</div>
 		</div>
