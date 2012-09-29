@@ -19,9 +19,11 @@ import (
 )
 
 type Activity struct {
-	TypeId      int64  `json:"type_id"`
-	Timestamp   string `json:"ts"`
-	Description string `json:"desc"`
+	TypeId      int64    `json:"type_id"`
+	Timestamp   string   `json:"ts"`
+	Description string   `json:"desc"`
+	Latitude    *float64 `json:"lat"`
+	Longitude   *float64 `json:"long"`
 }
 
 var (
@@ -144,7 +146,7 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 
 	user_id := session.Values["UserId"].(int64)
 
-	rows, err := db.Query("SELECT type_id, timestamp, description FROM activities WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?", user_id, ActivityLimit)
+	rows, err := db.Query("SELECT type_id, timestamp, description, latitude, longitude FROM activities WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?", user_id, ActivityLimit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -156,8 +158,18 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 		var type_id int64
 		var timestamp string
 		var description string
-		if err = rows.Scan(&type_id, &timestamp, &description); err == nil {
-			activities = append(activities, Activity{TypeId: type_id, Timestamp: timestamp, Description: description})
+		var longitude, latitude string
+		if err = rows.Scan(&type_id, &timestamp, &description, &latitude, &longitude); err == nil {
+			activity := Activity{TypeId: type_id, Timestamp: timestamp, Description: description}
+			if latitude != "" {
+				activity.Latitude = new(float64)
+				*activity.Latitude, _ = strconv.ParseFloat(latitude, 64)
+			}
+			if longitude != "" {
+				activity.Longitude = new(float64)
+				*activity.Longitude, _ = strconv.ParseFloat(longitude, 64)
+			}
+			activities = append(activities, activity)
 		} else {
 			log.Printf("rows.Scan failed: %v", err)
 		}

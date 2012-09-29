@@ -12,12 +12,18 @@ $(document).ready(function() {
 		$.post('/auth', { username: username, password: password }, function(result) {
 			if (result.authenticated == true) {
 				PageVars.authenticated = true;
+				PageVars.activities = result.activities;
 				$('#login_form').hide();
 				$('#logged_in_form').show();
 				//$('#logged_in_form #username').text(username);
 
 				$('#login_page').hide();
 				$('#main_page').show(200);
+
+				$.get('/activity/latest', function(result) {
+					var template = Handlebars.compile($('#tmpl_latest_activities_table').html());
+					$('#latest_activities').html(template({activities: result}));
+				});
 			} else {
 				// TODO: show error message from result.errormsg
 			}
