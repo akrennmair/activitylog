@@ -5,6 +5,8 @@ var PageVars = { };
 
 $(document).ready(function() {
 
+	var map = L.map('map');
+
 	$('#btn_signin').click(function(e) {
 		e.preventDefault();
 		var username = $('#login_form #username').val();
@@ -23,6 +25,18 @@ $(document).ready(function() {
 				$.get('/activity/latest', function(result) {
 					var template = Handlebars.compile($('#tmpl_latest_activities_table').html());
 					$('#latest_activities').html(template({activities: result}));
+					$('.map-btn').click(function(e) {
+						e.preventDefault();
+						var coords = $(this).attr('data-coords').split(",");
+						var latitude = parseFloat(coords[0]);
+						var longitude = parseFloat(coords[1]);
+						map.setView([latitude, longitude], 14);
+						L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+							maxZoom: 18
+						}).addTo(map);
+						L.marker([latitude, longitude]).addTo(map);
+						$('#modal_map').reveal();
+					});
 				});
 			} else {
 				// TODO: show error message from result.errormsg

@@ -15,7 +15,7 @@
 				Modernizr.load([
 					// first load jquery, bootstrap, handlebars
 					{
-						load: [ '/js/jquery.js', '/js/bootstrap.min.js', '/js/handlebars-1.0.rc.1.js' ]
+						load: [ '/js/jquery.js', '/js/bootstrap.min.js', '/js/handlebars-1.0.rc.1.js', '/js/jquery.reveal.js', '/js/leaflet.js' ]
 					},
 					// then load the application code
 					{
@@ -29,6 +29,8 @@
 			body { padding-top: 60px; }
 		</style>
 		<link href="/css/bootstrap-responsive.css" rel="stylesheet">
+		<link href="/css/reveal.css" rel="stylesheet">
+		<link href="/css/leaflet.css" rel="stylesheet">
 		<title>Activity Log</title>
 	</head>
 	<body>
@@ -95,6 +97,10 @@
 				</div>
 			</div>
 		</div>
+		<div id="modal_map" class="reveal-modal">
+			<div id="map" style="height: 400px"></div>
+			<a class="close-reveal-modal">&#215;</a>
+		</div>
 		<script id="tmpl_latest_activities_table" type="text/x-handlebars-template">
 			<h3>Latest Activities</h3>
 			<table class="table table-striped table-condensed table-bordered">
@@ -110,7 +116,7 @@
 					<tr>
 						<td>{{this.ts}}</td>
 						<td>{{this.desc}}</td>
-						<td>{{#if this.lat}}{{this.lat}},{{this.long}}{{else}}n/a{{/if}}</td>
+						<td>{{#if this.lat}}<a class="btn map-btn" data-coords="{{this.lat}},{{this.long}}">Show on Map</a>{{else}}n/a{{/if}}</td>
 					</tr>
 					{{/each}}
 				</tbody>
