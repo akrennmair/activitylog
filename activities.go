@@ -281,6 +281,47 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func TryAuthenticate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var result AuthResult
+	session, _ := store.Get(r, SESSION_NAME)
+	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
+		result.Authenticated = false
+		result.ErrorMsg = "Authentication failed."
+	} else {
+		if user_id, ok := session.Values["UserId"].(int64); ok {
+			result.Authenticated = true
+			rows, err := db.Query("SELECT id, name FROM activity_types WHERE user_id = ? AND active = 1", user_id)
+			if err != nil {
+				log.Printf("db.Query failed: %v", err)
+			}
+
+			result.Activities = []ActivityType{}
+			for rows.Next() {
+				var type_id int64
+				var name string
+				if err = rows.Scan(&type_id, &name); err == nil {
+					result.Activities = append(result.Activities, ActivityType{Id: type_id, Name: name})
+				}
+			}
+		} else {
+			result.Authenticated = false
+			result.ErrorMsg = "Authentication failed."
+		}
+	}
+
+	if json_data, err := json.Marshal(result); err == nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(json_data)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
@@ -361,6 +402,7 @@ func main() {
 
 	servemux.Handle("/", http.FileServer(http.Dir("htdocs")))
 	servemux.Handle("/auth", http.HandlerFunc(Authenticate))
+	servemux.Handle("/auth/try", http.HandlerFunc(TryAuthenticate))
 	servemux.Handle("/auth/signup", http.HandlerFunc(Signup))
 	servemux.Handle("/auth/logout", http.HandlerFunc(Logout))
 	servemux.Handle("/activity/add", http.HandlerFunc(AddActivity))

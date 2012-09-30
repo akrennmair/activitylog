@@ -1,6 +1,8 @@
 an unordered TODO list
 ======================
 
+- add link to menu to show latest/all activities.
+
 - provide feeds of the most recent activities by user.
 - in the Submit Activity dialog, add a checkbox "public activity". only public activities are shown in the feeds.
 - in the Submit Activity dialog, add a checkbox "track location". when checked, the current location is saved (if available).
