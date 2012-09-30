@@ -15,6 +15,10 @@ $(document).ready(function() {
 		$('#login_page').hide();
 		$('#main_page').show(200);
 
+		load_latest_activities();
+	};
+
+	var load_latest_activities = function() {
 		$.get('/activity/latest', function(result) {
 			var template = Handlebars.compile($('#tmpl_latest_activities_table').html());
 			$('#latest_activities').html(template({activities: result}));
@@ -31,7 +35,7 @@ $(document).ready(function() {
 				$('#modal_map').reveal();
 			});
 		});
-	};
+	}
 
 	var try_authenticate = function() {
 		$.post('/auth/try', { }, function(result) {
@@ -65,6 +69,11 @@ $(document).ready(function() {
 			$('#main_page').hide();
 			$('#login_page').show(200);
 		});
+	});
+
+	$('#show_latest_activities').click(function(e) {
+		e.preventDefault();
+		load_latest_activities();
 	});
 
 	try_authenticate();
