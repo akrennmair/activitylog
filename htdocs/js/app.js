@@ -4,6 +4,35 @@
 
 	var map = L.map('map');
 
+	var load_next_page = function() {
+		if (!PageVars.latest_activities_reached_end) {
+			$.get('/activity/list/' + PageVars.latest_activities_page, function(data) {
+				if (data.length == 0) {
+					console.log('reached end page = ' + PageVars.latest_activities_page);
+					PageVars.latest_activities_reached_end = true;
+				} else {
+					console.log('loaded page ' + PageVars.latest_activities_page);
+					PageVars.latest_activities_page++;
+					var template = Handlebars.compile($('#tmpl_latest_activities_table').html());
+					var new_rows = template({activities: data});
+					$('#latest_activities_table').append(new_rows);
+					$('.map-btn').click(function(e) {
+						e.preventDefault();
+						var coords = $(this).attr('data-coords').split(",");
+						var latitude = parseFloat(coords[0]);
+						var longitude = parseFloat(coords[1]);
+						map.setView([latitude, longitude], 14);
+						L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+							maxZoom: 18
+						}).addTo(map);
+						L.marker([latitude, longitude]).addTo(map);
+						$('#modal_map').reveal();
+					});
+				}
+			});
+		}
+	};
+
 	var app = $.sammy(function() {
 
 		var show_page = function(id) {
@@ -45,23 +74,11 @@
 			});
 		};
 
+
 		var load_latest_activities = function() {
-			$.get('/activity/latest', function(result) {
-				var template = Handlebars.compile($('#tmpl_latest_activities_table').html());
-				$('#latest_activities').html(template({activities: result}));
-				$('.map-btn').click(function(e) {
-					e.preventDefault();
-					var coords = $(this).attr('data-coords').split(",");
-					var latitude = parseFloat(coords[0]);
-					var longitude = parseFloat(coords[1]);
-					map.setView([latitude, longitude], 14);
-					L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-						maxZoom: 18
-					}).addTo(map);
-					L.marker([latitude, longitude]).addTo(map);
-					$('#modal_map').reveal();
-				});
-			});
+			PageVars.latest_activities_reached_end = false;
+			PageVars.latest_activities_page = 1;
+			load_next_page();
 		};
 
 		var bind_edit_and_delete_buttons = function() {
@@ -166,6 +183,17 @@
 
 	$(function() {
 		app.run('#/');
+	});
+
+	$(document).ready(function() {
+		PageVars.latest_activities_reached_end = false;
+		PageVars.latest_activities_page = 1;
+		$('#latest_activities').waypoint(function(event, direction) {
+			console.log('waypoint event! dir = ' + direction);
+			if (direction === 'down') {
+				load_next_page();
+			}
+		}, { offset: 'bottom-in-view' });
 	});
 
 })(jQuery);

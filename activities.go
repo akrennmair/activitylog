@@ -35,7 +35,6 @@ var (
 const (
 	ActivityLimit = 10
 	SESSION_NAME  = "activities-session"
-	DB_NAME       = "activitylog"
 	PBKDF2_ROUNDS = 10000
 	PBKDF2_SIZE   = 32
 )
@@ -158,7 +157,7 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK")
 }
 
-func LatestActivities(w http.ResponseWriter, r *http.Request) {
+func ListActivities(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, SESSION_NAME)
 	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
 		http.Error(w, "unauthenticated", http.StatusForbidden)
@@ -167,10 +166,32 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 
 	user_id := session.Values["UserId"].(int64)
 
-	rows, err := db.Query("SELECT type_id, timestamp, description, latitude, longitude FROM activities WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?", user_id, ActivityLimit)
+	page, err := strconv.ParseInt(r.URL.Query().Get(":page"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	activities, err := GetActivitiesForUser(user_id, ActivityLimit, uint(page-1)*ActivityLimit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if json_data, err := json.Marshal(activities); err == nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(json_data)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func GetActivitiesForUser(user_id int64, limit uint, offset uint) ([]Activity, error) {
+	rows, err := db.Query("SELECT type_id, timestamp, description, latitude, longitude FROM activities WHERE user_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?", user_id, limit, offset)
+	if err != nil {
+		log.Printf("GetActivitiesForUser: %v", err)
+		return nil, err
 	}
 
 	activities := []Activity{}
@@ -194,6 +215,24 @@ func LatestActivities(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Printf("rows.Scan failed: %v", err)
 		}
+	}
+
+	return activities, nil
+}
+
+func LatestActivities(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, SESSION_NAME)
+	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
+		http.Error(w, "unauthenticated", http.StatusForbidden)
+		return
+	}
+
+	user_id := session.Values["UserId"].(int64)
+
+	activities, err := GetActivitiesForUser(user_id, ActivityLimit, 0)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	if json_data, err := json.Marshal(activities); err == nil {
@@ -412,6 +451,7 @@ func main() {
 	r.Post("/auth/logout", http.HandlerFunc(Logout))
 	r.Post("/auth", http.HandlerFunc(Authenticate))
 	r.Post("/activity/add", http.HandlerFunc(AddActivity))
+	r.Get("/activity/list/{page:[0-9]+}", http.HandlerFunc(ListActivities))
 	r.Post("/activity/type/add", http.HandlerFunc(AddActivityType))
 	r.Post("/activity/type/edit", http.HandlerFunc(EditActivityType))
 	r.Post("/activity/type/del", http.HandlerFunc(DeleteActivityType))
