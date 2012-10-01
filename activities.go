@@ -75,6 +75,47 @@ func AddActivityType(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func EditActivityType(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, SESSION_NAME)
+	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
+		http.Error(w, "unauthenticated", http.StatusForbidden)
+		return
+	}
+
+	//user_id := session.Values["UserId"].(int64)
+
+	activity_type_id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+
+	new_name := r.FormValue("newname")
+
+	log.Printf("edit activity type id %d new_name = %s", activity_type_id, new_name)
+
+	fmt.Fprintf(w, "OK")
+}
+
+func DeleteActivityType(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, SESSION_NAME)
+	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
+		http.Error(w, "unauthenticated", http.StatusForbidden)
+		return
+	}
+
+	user_id := session.Values["UserId"].(int64)
+
+	activity_type_id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+
+	log.Printf("delete activity type id %d", activity_type_id);
+
+	_, err := db.Exec("UPDATE activity_types SET active = 0 WHERE user_id = ? AND id = ?", user_id, activity_type_id);
+	if err != nil {
+		log.Printf("db.Exec failed: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "OK")
+}
+
 func AddActivity(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, SESSION_NAME)
 	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
@@ -251,6 +292,40 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ListActivityTypes(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, SESSION_NAME)
+	activity_types := []ActivityType{}
+	if user_id, ok := session.Values["UserId"].(int64); ok {
+		activity_types = GetActivityTypesForUser(user_id)
+	}
+
+	if json_data, err := json.Marshal(activity_types); err == nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(json_data)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func GetActivityTypesForUser(user_id int64) (activities []ActivityType) {
+	activities = []ActivityType{}
+
+	rows, err := db.Query("SELECT id, name FROM activity_types WHERE user_id = ? AND active = 1", user_id)
+	if err != nil {
+		log.Printf("db.Query failed: %v", err)
+		return
+	}
+
+	for rows.Next() {
+		var type_id int64
+		var name string
+		if err = rows.Scan(&type_id, &name); err == nil {
+			activities = append(activities, ActivityType{Id: type_id, Name: name})
+		}
+	}
+	return
+}
+
 func TryAuthenticate(w http.ResponseWriter, r *http.Request) {
 	var result AuthResult
 	session, _ := store.Get(r, SESSION_NAME)
@@ -260,19 +335,7 @@ func TryAuthenticate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if user_id, ok := session.Values["UserId"].(int64); ok {
 			result.Authenticated = true
-			rows, err := db.Query("SELECT id, name FROM activity_types WHERE user_id = ? AND active = 1", user_id)
-			if err != nil {
-				log.Printf("db.Query failed: %v", err)
-			}
-
-			result.Activities = []ActivityType{}
-			for rows.Next() {
-				var type_id int64
-				var name string
-				if err = rows.Scan(&type_id, &name); err == nil {
-					result.Activities = append(result.Activities, ActivityType{Id: type_id, Name: name})
-				}
-			}
+			result.Activities = GetActivityTypesForUser(user_id);
 		} else {
 			result.Authenticated = false
 			result.ErrorMsg = "Authentication failed."
@@ -296,20 +359,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	var result AuthResult
 	if user_id, ok := VerifyCredentials(username, password); ok {
 		result.Authenticated = true
-
-		rows, err := db.Query("SELECT id, name FROM activity_types WHERE user_id = ? AND active = 1", user_id)
-		if err != nil {
-			log.Printf("db.Query failed: %v", err)
-		}
-
-		result.Activities = []ActivityType{}
-		for rows.Next() {
-			var type_id int64
-			var name string
-			if err = rows.Scan(&type_id, &name); err == nil {
-				result.Activities = append(result.Activities, ActivityType{Id: type_id, Name: name})
-			}
-		}
+		result.Activities = GetActivityTypesForUser(user_id)
 
 		// create new session and store that authentication was successful
 		session, _ := store.Get(r, SESSION_NAME)
@@ -363,9 +413,10 @@ func main() {
 	r.Post("/auth", http.HandlerFunc(Authenticate))
 	r.Post("/activity/add", http.HandlerFunc(AddActivity))
 	r.Post("/activity/type/add", http.HandlerFunc(AddActivityType))
+	r.Post("/activity/type/edit", http.HandlerFunc(EditActivityType))
+	r.Post("/activity/type/del", http.HandlerFunc(DeleteActivityType))
+	r.Get("/activity/type/list", http.HandlerFunc(ListActivityTypes))
 
-	//r.Add("GET", "/activity/latest", http.HandlerFunc(LatestActivities))
-	//r.Add("GET", "/", http.FileServer(http.Dir("htdocs")))
 	r.Get("/activity/latest", http.HandlerFunc(LatestActivities))
 	r.Add("GET", "/", http.FileServer(http.Dir("htdocs")))
 

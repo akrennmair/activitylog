@@ -92,14 +92,15 @@
 							<li></li>
 							<li><a href="#/main">Show Latest Activities</a></li>
 							<li><a href="#">Add Activity</a></li>
-							<li><a href="#">Edit Activity Types</a></li>
+							<li><a href="#/activity/types/edit">Edit Activity Types</a></li>
 							<li><a href="#">Statistics</a></li>
 						</ul>
 					</div>
 				</div>
-				<div class="span9">
-					<div id="latest_activities"></div>
-				</div>
+				<!-- latest activities -->
+				<div class="span9 subpage" id="latest_activities"></div>
+				<!-- edit activity types -->
+				<div class="span9 subpage" id="edit_activity_types"></div>
 			</div>
 		</div>
 
@@ -137,6 +138,44 @@
 						<td>{{this.ts}}</td>
 						<td>{{this.desc}}</td>
 						<td>{{#if this.lat}}<a class="btn map-btn" data-coords="{{this.lat}},{{this.long}}">Show on Map</a>{{else}}n/a{{/if}}</td>
+					</tr>
+					{{/each}}
+				</tbody>
+			</table>
+		</script>
+		<script id="tmpl_edit_activity_type" type="text/x-handlebars-template">
+			<tr id="at_edit_{{this.type_id}}">
+				<td><input type="text" id="new_name" value="{{this.name}}"></td>
+				<td>
+					<button class="btn btn-primary" type="button" id="btn_save">Save</a>
+					<button class="btn" type="button" id="btn_cancel">Cancel</a>
+				</td>
+			</tr>
+		</script>
+		<script id="tmpl_activity_type_row" type="text/x-handlebars-template">
+			<tr id="at_edit_{{this.type_id}}">
+				<td>{{this.name}}</td>
+				<td>
+					<a class="btn edit_btn" data-id="{{this.type_id}}">Edit</a>
+					<a class="btn delete_btn" data-id="{{this.type_id}}">Delete</a>
+				</td>
+			</tr>
+		</script>
+		<script id="tmpl_edit_activity_types" type="text/x-handlebars-template">
+			<h3>Edit Activity Types</h3>
+			<table class="table table-striped table-condensed table-bordered">
+				<thead>
+					<th>Name</th>
+					<th>Actions</th>
+				</thead>
+				<tbody>
+					{{#each activity_types}}
+					<tr id="at_edit_{{this.type_id}}">
+						<td>{{this.name}}</td>
+						<td>
+							<a class="btn edit_btn" data-id="{{this.type_id}}">Edit</a>
+							<a class="btn delete_btn" data-id="{{this.type_id}}">Delete</a>
+						</td>
 					</tr>
 					{{/each}}
 				</tbody>
