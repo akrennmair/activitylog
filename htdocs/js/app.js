@@ -60,7 +60,7 @@
 
 		this.get('#/main', function(ctx) {
 			if (!PageVars.authenticated) {
-				app.setLocation("#/");
+				ctx.redirect("#/");
 				return;
 			}
 
@@ -74,7 +74,7 @@
 				$('#login_form').show();
 				$('#logged_in_form').hide();
 
-				app.setLocation('#/');
+				ctx.redirect('#/');
 			});
 		});
 
