@@ -55,7 +55,8 @@ $(document).ready(function() {
 			if (result.authenticated == true) {
 				perform_login(result);
 			} else {
-				// TODO: show error message from result.errormsg
+				var template = Handlebars.compile($('#tmpl_errormsg').html());
+				$('#errormsg_placeholder').html(template({message: result.errormsg}));
 			}
 		});
 	});

@@ -13,7 +13,7 @@
 				document.location = '/m/';
 			} else {
 				Modernizr.load([
-					// first load jquery, bootstrap, handlebars
+					// first load libraries
 					{
 						load: [ '/js/jquery.js', '/js/bootstrap.min.js', '/js/handlebars-1.0.rc.1.js', '/js/jquery.reveal.js', '/js/leaflet.js' ]
 					},
@@ -52,7 +52,6 @@
 						</ul>
 					</div>
 					<div class="pull-right" id="logged_in_form" style="display: none">
-						<!-- TODO: show username somewhere here -->
 						<div><button class="btn" id="btn_logout">Logout</button></div>
 					</div>
 					<form class="navbar-form pull-right" id="login_form">
@@ -65,6 +64,7 @@
 			</div>
 		</div>
 		<div class="container_fluid" id="login_page">
+			<div class="row-fluid" id="errormsg_placeholder"></div>
 			<div class="row-fluid">
 				<div class="hero-unit">
 					<h1>
@@ -122,6 +122,13 @@
 					{{/each}}
 				</tbody>
 			</table>
+		</script>
+		<script id="tmpl_errormsg" type="text/x-handlebars-template">
+			<div class="alert alert-error">
+				<a href="#" class="close" data-dismiss="alert">&times;</a>
+				<h4>Error</h4>
+				{{message}}
+			</div>
 		</script>
 	</body>
 </html>
