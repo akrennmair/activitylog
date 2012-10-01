@@ -1,9 +1,7 @@
 an unordered TODO list
 ======================
 
-- provide feeds of the most recent activities by user.
-- in the Submit Activity dialog, add a checkbox "public activity". only public activities are shown in the feeds.
-- in the Submit Activity dialog, add a checkbox "track location". when checked, the current location is saved (if available).
+- provide feeds of the most recent activities by user. only show public activities.
 - make type of activity configurable. configurable aspects are:
 	- activity is a point in time vs. activity has a start and end timestamp.
 	- activity can be rated
@@ -17,3 +15,5 @@ an unordered TODO list
 - social interface: users can follow each other and see their public activities
 
 - provide an API for external applications to post events. This is useful for integrating external services and devices.
+
+- find a fancy project name and build a hosted version of this application for everyone to use.
