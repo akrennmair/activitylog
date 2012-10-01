@@ -16,12 +16,12 @@
 				<h1>Login</h1>
 			</div>
 			<div data-role="content">
-				<form action="#" method="post">
+				<form method="post" id="login_form">
 					<label for="username">Username:</label>
 					<input type="text" name="username" id="username" value="">
 					<label for="password">Password:</label>
 					<input type="password" name="password" id="password" value="">
-					<a href="" data-role="button" id="signin_btn" data-theme="b">Sign In</a>
+					<input type="submit" href="" data-role="button" id="signin_btn" data-theme="b" value="Sign In" onclick="return false;">
 					<a href="#signup_screen" data-role="button">Sign Up</a>
 				</form>
 			</div>
@@ -67,7 +67,6 @@
 				<div id="submit_activity_list" data-role="listview" data-inset="true"></div>
 				<div data-role="footer" data-position="fixed">
 					<a href="#page_activity_type_add" data-role="button" data-icon="plus" data-theme="b">Add activity type</a>
-					<!-- <a href="#page_activity_types_edit" data-role="button" data-icon="gear" data-theme="b">Edit activity types</a> -->
 					<a href="#page_list" data-role="button" data-icon="search" id="show_latest" class="ui-btn-right" data-theme="b">Show latest activities</a>
 				</div>
 			</div>

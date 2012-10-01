@@ -8,7 +8,7 @@ an unordered TODO list
 	- activity contains a numeric value (e.g. number of calories, weight of poo, current heart rate, etc.)
 - the mobile user interface shall detect when it's offline, and store its data in localstorage until it is online again. when online, sync with server.
 - provide a mobile UI and a web UI. 
-	- the mobile UI shall allow basic configuration of activity types, add activities and viewing recent activities.
+	- the mobile UI shall only allow a bare minimum, such as adding activities, adding activity types and viewing recent activities.
 	- the web UI shall provide the whole experience: full configuration, adding activities, and detailed views of activities including stats, graphs, etc.
 - implement CSRF protection
 

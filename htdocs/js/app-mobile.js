@@ -50,7 +50,7 @@ var populate_activities = function(id, activities) {
 };
 
 $(document).ready(function() {
-	$('#signin_btn').click(function() {
+	$('#signin_btn').click(function(e) {
 		var username = $('#login_screen #username').val();
 		var password = $('#login_screen #password').val();
 
