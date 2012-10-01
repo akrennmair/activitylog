@@ -27,6 +27,10 @@ type ActivityTypeAdder interface {
 	AddActivityType(typename string, user_id int64) (ActivityType, error)
 }
 
+type ActivityTypeUpdater interface {
+	UpdateActivityType(typename string, user_id int64, activity_type_id int64) error
+}
+
 type ActivityTypeDeleter interface {
 	DeleteActivityType(user_id int64, activity_type_id int64) error
 }
@@ -37,6 +41,14 @@ type UserRegistrar interface {
 
 type Database struct {
 	conn *sql.DB
+}
+
+func (db *Database) UpdateActivityType(typename string, user_id int64, activity_type_id int64) error {
+	_, err := db.conn.Exec("UPDATE activity_types SET name = ? WHERE user_id = ? AND id = ?", typename, user_id, activity_type_id)
+	if err != nil {
+		log.Printf("db.conn.Exec failed: %v", err)
+	}
+	return err
 }
 
 func (db *Database) AddActivityType(typename string, user_id int64) (activity_type ActivityType, err error) {

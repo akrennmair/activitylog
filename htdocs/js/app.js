@@ -82,6 +82,7 @@
 		};
 
 		var bind_edit_and_delete_buttons = function() {
+			$('#edit_activity_types .edit_btn').unbind('click');
 			$('#edit_activity_types .edit_btn').click(function() {
 				var id = $(this).attr('data-id');
 				var old_edit_row = $('#at_edit_' + id).clone();
@@ -90,7 +91,8 @@
 				$('#at_edit_' + id).replaceWith(template({type_id: id, name: PageVars.activities_map[id].name}));
 
 				$('#at_edit_' + id + ' #btn_cancel').click(function() {
-					$('#at_edit_' + id).replaceWith(old_edit_row);
+					var edit_row = old_edit_row;
+					$('#at_edit_' + id).replaceWith(edit_row);
 					bind_edit_and_delete_buttons();
 				});
 
@@ -105,9 +107,9 @@
 				});
 
 			});
+			$('#edit_activity_types .deletdeletee_btn').unbind('click');
 			$('#edit_activity_types .delete_btn').click(function() {
 				var id = $(this).attr('data-id');
-				console.log('delete activity type ' + id);
 				if (window.confirm("Are you sure you want to delete this activity type?") === true) {
 					$.post('/activity/type/del', { id: id }, function(result) {
 						$('#at_edit_' + id).remove();
@@ -122,6 +124,18 @@
 				update_activities_map();
 				var template = Handlebars.compile($('#tmpl_edit_activity_types').html());
 				$('#edit_activity_types').html(template({activity_types: result}));
+				$('#add_activity_type_btn').click(function(e) {
+					e.preventDefault();
+					var name = $('#at_newname').val();
+					$.post('/activity/type/add', { "typename": name }, function(result) {
+						PageVars.activities.push(result);
+						update_activities_map();
+						var tmpl = Handlebars.compile($('#tmpl_activity_type_row').html());
+						$('#at_newname').val("");
+						$('#edit_activity_types_tbody').append(tmpl(result));
+						bind_edit_and_delete_buttons();
+					});
+				});
 				bind_edit_and_delete_buttons();
 			});
 		};

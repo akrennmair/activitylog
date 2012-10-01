@@ -113,12 +113,10 @@ $(document).ready(function() {
 				navigator.geolocation.getCurrentPosition(function(position) {
 					add_activity({ "type_id": type_id, "desc": desc, "public": is_public, 'lat': position.coords.latitude, 'long': position.coords.longitude });
 				});
-			} else {
-				add_activity({ "type_id": type_id, "desc": desc, "public": is_public });
+				return;
 			}
-		} else {
-			add_activity({ "type_id": type_id, "desc": desc, "public": is_public });
 		}
+		add_activity({ "type_id": type_id, "desc": desc, "public": is_public });
 	});
 
 	$('#add_activity_type_btn').click(function() {

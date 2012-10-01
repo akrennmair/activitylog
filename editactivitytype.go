@@ -10,6 +10,7 @@ import (
 
 type EditActivityTypeHandler struct {
 	Store sessions.Store
+	Db    ActivityTypeUpdater
 }
 
 func (h *EditActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -19,17 +20,18 @@ func (h *EditActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	//user_id := session.Values["UserId"].(int64)
+	user_id := session.Values["UserId"].(int64)
 
 	activity_type_id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
 
-	// TODO: implement
-
 	new_name := r.FormValue("newname")
 
-	log.Printf("edit activity type id %d new_name = %s", activity_type_id, new_name)
-
-	// TODO: return information about updated activity type
-
-	fmt.Fprintf(w, "OK")
+	err := h.Db.UpdateActivityType(new_name, user_id, activity_type_id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		log.Printf("edit activity type id %d new_name = %s", activity_type_id, new_name)
+		// TODO: maybe return JSON
+		fmt.Fprintf(w, "OK")
+	}
 }

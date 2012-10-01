@@ -156,8 +156,8 @@
 			<tr id="at_edit_{{this.type_id}}">
 				<td><input type="text" id="new_name" value="{{this.name}}"></td>
 				<td>
-					<button class="btn btn-primary" type="button" id="btn_save">Save</a>
-					<button class="btn" type="button" id="btn_cancel">Cancel</a>
+					<button class="btn btn-small btn-primary" type="button" id="btn_save">Save</a>
+					<button class="btn btn-small" type="button" id="btn_cancel">Cancel</a>
 				</td>
 			</tr>
 		</script>
@@ -165,25 +165,42 @@
 			<tr id="at_edit_{{this.type_id}}">
 				<td>{{this.name}}</td>
 				<td>
-					<a class="btn edit_btn" data-id="{{this.type_id}}">Edit</a>
-					<a class="btn delete_btn" data-id="{{this.type_id}}">Delete</a>
+					<a class="btn btn-small edit_btn" data-id="{{this.type_id}}">Edit</a>
+					<a class="btn btn-small delete_btn" data-id="{{this.type_id}}">Delete</a>
 				</td>
 			</tr>
 		</script>
 		<script id="tmpl_edit_activity_types" type="text/x-handlebars-template">
 			<h3>Edit Activity Types</h3>
+			<div class="row-fluid">
+				<div class="span9">
+					<form class="form-horizontal well">
+						<div class="control-group">
+							<label class="control-label" for="newname">Activity Type Name</label>
+							<div class="controls">
+								<input type="text"  class="input-small" id="at_newname" name="at_newname" style="width: 50%" placeholder="Activity Type Name">
+							</div>
+						</div>
+						<div class="control-group">
+							<div class="controls">
+								<a class="btn btn-primary btn-small" id="add_activity_type_btn">Add Activity Type</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
 			<table class="table table-striped table-condensed table-bordered">
 				<thead>
 					<th>Name</th>
 					<th>Actions</th>
 				</thead>
-				<tbody>
+				<tbody id="edit_activity_types_tbody">
 					{{#each activity_types}}
 					<tr id="at_edit_{{this.type_id}}">
 						<td>{{this.name}}</td>
 						<td>
-							<a class="btn edit_btn" data-id="{{this.type_id}}">Edit</a>
-							<a class="btn delete_btn" data-id="{{this.type_id}}">Delete</a>
+							<a class="btn btn-small edit_btn" data-id="{{this.type_id}}">Edit</a>
+							<a class="btn btn-small delete_btn" data-id="{{this.type_id}}">Delete</a>
 						</td>
 					</tr>
 					{{/each}}
