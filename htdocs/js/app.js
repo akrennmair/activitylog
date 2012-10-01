@@ -38,7 +38,7 @@ $(document).ready(function() {
 	}
 
 	var try_authenticate = function() {
-		$.post('/auth/try', { }, function(result) {
+		$.post('/auth/try', { dummy: "ignored" }, function(result) {
 			if (result.authenticated == true) {
 				perform_login(result);
 			}

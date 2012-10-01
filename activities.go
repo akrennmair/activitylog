@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "code.google.com/p/go-mysql-driver/mysql"
 	"code.google.com/p/go.crypto/pbkdf2"
+	"code.google.com/p/gorilla/pat"
 	"code.google.com/p/gorilla/sessions"
 	"crypto/rand"
 	"crypto/sha256"
@@ -45,11 +46,6 @@ type ActivityType struct {
 }
 
 func AddActivityType(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
-		return
-	}
-
 	session, _ := store.Get(r, SESSION_NAME)
 	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
 		http.Error(w, "unauthenticated", http.StatusForbidden)
@@ -57,12 +53,6 @@ func AddActivityType(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user_id := session.Values["UserId"].(int64)
-
-	if err := r.ParseForm(); err != nil {
-		log.Printf("r.ParseForm failed: %v", err)
-		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
-		return
-	}
 
 	typename := r.FormValue("typename")
 
@@ -86,11 +76,6 @@ func AddActivityType(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddActivity(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
-		return
-	}
-
 	session, _ := store.Get(r, SESSION_NAME)
 	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
 		http.Error(w, "unauthenticated", http.StatusForbidden)
@@ -99,11 +84,6 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 
 	username := session.Values["UserName"].(string)
 	user_id := session.Values["UserId"].(int64)
-
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
-		return
-	}
 
 	type_id := r.FormValue("type_id")
 	description := r.FormValue("desc")
@@ -251,16 +231,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
-		return
-	}
-
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
@@ -282,11 +252,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func TryAuthenticate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var result AuthResult
 	session, _ := store.Get(r, SESSION_NAME)
 	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
@@ -314,6 +279,8 @@ func TryAuthenticate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	log.Printf("TryAuthenticate: %v", result)
+
 	if json_data, err := json.Marshal(result); err == nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.Write(json_data)
@@ -323,16 +290,6 @@ func TryAuthenticate(w http.ResponseWriter, r *http.Request) {
 }
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "can't anything other than POST", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "couldn't parse form", http.StatusInternalServerError)
-		return
-	}
-
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
@@ -398,18 +355,21 @@ func main() {
 
 	store = sessions.NewCookieStore([]byte(auth_key), []byte(enc_key))
 
-	servemux := http.NewServeMux()
+	r := pat.New()
 
-	servemux.Handle("/", http.FileServer(http.Dir("htdocs")))
-	servemux.Handle("/auth", http.HandlerFunc(Authenticate))
-	servemux.Handle("/auth/try", http.HandlerFunc(TryAuthenticate))
-	servemux.Handle("/auth/signup", http.HandlerFunc(Signup))
-	servemux.Handle("/auth/logout", http.HandlerFunc(Logout))
-	servemux.Handle("/activity/add", http.HandlerFunc(AddActivity))
-	servemux.Handle("/activity/latest", http.HandlerFunc(LatestActivities))
-	servemux.Handle("/activity/type/add", http.HandlerFunc(AddActivityType))
+	r.Post("/auth/try", http.HandlerFunc(TryAuthenticate))
+	r.Post("/auth/signup", http.HandlerFunc(Signup))
+	r.Post("/auth/logout", http.HandlerFunc(Logout))
+	r.Post("/auth", http.HandlerFunc(Authenticate))
+	r.Post("/activity/add", http.HandlerFunc(AddActivity))
+	r.Post("/activity/type/add", http.HandlerFunc(AddActivityType))
 
-	httpsrv := &http.Server{Handler: servemux, Addr: ":8000"}
+	//r.Add("GET", "/activity/latest", http.HandlerFunc(LatestActivities))
+	//r.Add("GET", "/", http.FileServer(http.Dir("htdocs")))
+	r.Get("/activity/latest", http.HandlerFunc(LatestActivities))
+	r.Add("GET", "/", http.FileServer(http.Dir("htdocs")))
+
+	httpsrv := &http.Server{Handler: r, Addr: ":8000"}
 	if err := httpsrv.ListenAndServe(); err != nil {
 		log.Fatalf("ListenAndServe: %v", err)
 	}
