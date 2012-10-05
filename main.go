@@ -12,18 +12,11 @@ import (
 	"os"
 )
 
-type Activity struct {
-	TypeId      int64    `json:"type_id"`
-	Timestamp   string   `json:"ts"`
-	Description string   `json:"desc"`
-	Latitude    *float64 `json:"lat"`
-	Longitude   *float64 `json:"long"`
-}
-
 var (
 	store sessions.Store
 	db    *sql.DB
 )
+
 
 const (
 	ActivityLimit = 10
@@ -32,11 +25,20 @@ const (
 	PBKDF2_SIZE   = 32
 )
 
+
+type Activity struct {
+	TypeId      int64    `json:"type_id"`
+	Timestamp   string   `json:"ts"`
+	Description string   `json:"desc"`
+	Latitude    *float64 `json:"lat"`
+	Longitude   *float64 `json:"long"`
+}
+
+
 type ActivityType struct {
 	Id   int64  `json:"type_id"`
 	Name string `json:"name"`
 }
-
 
 type AuthResult struct {
 	Authenticated bool           `json:"authenticated"`
@@ -50,6 +52,8 @@ type User struct {
 	Password []byte
 	Salt     []byte
 }
+
+
 
 func main() {
 	var cfgfile *string = flag.String("config", "", "configuration file")
