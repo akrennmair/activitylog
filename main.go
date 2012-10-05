@@ -86,7 +86,7 @@ func main() {
 	r.Add("GET", "/activity/latest", &LatestActivitiesHandler{Db: db, Store: store})
 	r.Add("GET", "/", http.FileServer(http.Dir("htdocs")))
 
-	httpsrv := &http.Server{Handler: r, Addr: ":8000"}
+	httpsrv := &http.Server{Handler: Logger(r), Addr: ":8000"}
 	if err := httpsrv.ListenAndServe(); err != nil {
 		log.Fatalf("ListenAndServe: %v", err)
 	}
