@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/rand"
 	"database/sql"
 	"log"
 	"strconv"
@@ -84,3 +86,23 @@ func RegisterUser(username, password string) error {
 	return err
 }
 
+func VerifyCredentials(username, password string) (user_id int64, authenticated bool) {
+	row := db.QueryRow("SELECT id, pwhash, salt FROM users WHERE login = ? LIMIT 1", username)
+	var db_hash []byte
+	var salt []byte
+
+	if err := row.Scan(&user_id, &db_hash, &salt); err != nil {
+		log.Printf("VerifyCredentials: %v", err)
+		return 0, false
+	}
+
+	password_hash := pbkdf2.Key([]byte(password), salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
+
+	return user_id, bytes.Equal(password_hash, db_hash)
+}
+
+func GenerateSalt() (data []byte, err error) {
+	data = make([]byte, 8)
+	_, err = rand.Read(data)
+	return
+}
