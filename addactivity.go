@@ -1,15 +1,15 @@
 package main
 
 import (
-	"net/http"
-	"log"
-	"fmt"
-	"strconv"
 	"code.google.com/p/gorilla/sessions"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
 )
 
 type AddActivityHandler struct {
-	Db ActivityAdder
+	Db    ActivityAdder
 	Store sessions.Store
 }
 

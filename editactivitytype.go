@@ -2,10 +2,10 @@ package main
 
 import (
 	"code.google.com/p/gorilla/sessions"
-	"net/http"
-	"log"
-	"strconv"
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
 )
 
 type EditActivityTypeHandler struct {

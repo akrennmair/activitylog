@@ -2,15 +2,15 @@ package main
 
 import (
 	"code.google.com/p/gorilla/sessions"
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
-	"log"
-	"fmt"
 )
 
 type DeleteActivityTypeHandler struct {
 	Store sessions.Store
-	Db ActivityTypeDeleter
+	Db    ActivityTypeDeleter
 }
 
 func (h *DeleteActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +24,7 @@ func (h *DeleteActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 
 	activity_type_id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
 
-	log.Printf("delete activity type id %d", activity_type_id);
+	log.Printf("delete activity type id %d", activity_type_id)
 
 	if err := h.Db.DeleteActivityType(user_id, activity_type_id); err != nil {
 		log.Printf("deactivating activity type %d failed: %v", activity_type_id, err)

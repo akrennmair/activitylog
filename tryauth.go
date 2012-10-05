@@ -2,13 +2,13 @@ package main
 
 import (
 	"code.google.com/p/gorilla/sessions"
-	"net/http"
 	"encoding/json"
 	"log"
+	"net/http"
 )
 
 type TryAuthenticateHandler struct {
-	Db ActivityTypesGetter
+	Db    ActivityTypesGetter
 	Store sessions.Store
 }
 
@@ -21,7 +21,7 @@ func (h *TryAuthenticateHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	} else {
 		if user_id, ok := session.Values["UserId"].(int64); ok {
 			result.Authenticated = true
-			result.Activities = h.Db.GetActivityTypesForUser(user_id);
+			result.Activities = h.Db.GetActivityTypesForUser(user_id)
 		} else {
 			result.Authenticated = false
 			result.ErrorMsg = "Authentication failed."

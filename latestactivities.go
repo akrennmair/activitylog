@@ -2,13 +2,13 @@ package main
 
 import (
 	"code.google.com/p/gorilla/sessions"
-	"net/http"
 	"encoding/json"
+	"net/http"
 )
 
 type LatestActivitiesHandler struct {
 	Store sessions.Store
-	Db *Database
+	Db    *Database
 }
 
 func (h *LatestActivitiesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

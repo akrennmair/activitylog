@@ -7,7 +7,7 @@ import (
 )
 
 type ListActivityTypesHandler struct {
-	Db ActivityTypesGetter
+	Db    ActivityTypesGetter
 	Store sessions.Store
 }
 

@@ -1,14 +1,14 @@
 package main
 
 import (
-	"net/http"
-	"encoding/json"
 	"code.google.com/p/gorilla/sessions"
+	"encoding/json"
+	"net/http"
 )
 
 type AddActivityTypeHandler struct {
 	Store sessions.Store
-	Db ActivityTypeAdder
+	Db    ActivityTypeAdder
 }
 
 func (h *AddActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

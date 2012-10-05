@@ -12,14 +12,12 @@ import (
 	"os"
 )
 
-
 const (
 	ActivityLimit = 10
 	SESSION_NAME  = "activities-session"
 	PBKDF2_ROUNDS = 10000
 	PBKDF2_SIZE   = 32
 )
-
 
 type Activity struct {
 	TypeId      int64    `json:"type_id"`
@@ -28,7 +26,6 @@ type Activity struct {
 	Latitude    *float64 `json:"lat"`
 	Longitude   *float64 `json:"long"`
 }
-
 
 type ActivityType struct {
 	Id   int64  `json:"type_id"`
@@ -41,13 +38,11 @@ type AuthResult struct {
 	Activities    []ActivityType `json:"activities,omitempty"`
 }
 
-
 type User struct {
 	Id       string `_id`
 	Password []byte
 	Salt     []byte
 }
-
 
 func main() {
 	var cfgfile *string = flag.String("config", "", "configuration file")
@@ -83,13 +78,13 @@ func main() {
 	r.Add("POST", "/auth/logout", &LogoutHandler{Store: store})
 	r.Add("POST", "/auth", &AuthenticateHandler{Db: db, Store: store})
 	r.Add("POST", "/activity/add", &AddActivityHandler{Store: store, Db: db})
-	r.Add("GET",  "/activity/list/{page:[0-9]+}", &ListActivitiesHandler{Db: db, Store: store})
+	r.Add("GET", "/activity/list/{page:[0-9]+}", &ListActivitiesHandler{Db: db, Store: store})
 	r.Add("POST", "/activity/type/add", &AddActivityTypeHandler{Db: db, Store: store})
-	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{/* Db: db, */Store: store})
+	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{ /* Db: db, */ Store: store})
 	r.Add("POST", "/activity/type/del", &DeleteActivityTypeHandler{Db: db, Store: store})
-	r.Add("GET",  "/activity/type/list", &ListActivityTypesHandler{Db: db, Store: store})
-	r.Add("GET",  "/activity/latest", &LatestActivitiesHandler{Db: db, Store: store})
-	r.Add("GET",  "/", http.FileServer(http.Dir("htdocs")))
+	r.Add("GET", "/activity/type/list", &ListActivityTypesHandler{Db: db, Store: store})
+	r.Add("GET", "/activity/latest", &LatestActivitiesHandler{Db: db, Store: store})
+	r.Add("GET", "/", http.FileServer(http.Dir("htdocs")))
 
 	httpsrv := &http.Server{Handler: r, Addr: ":8000"}
 	if err := httpsrv.ListenAndServe(); err != nil {

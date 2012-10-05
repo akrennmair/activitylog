@@ -2,12 +2,12 @@ package main
 
 import (
 	"bytes"
+	"code.google.com/p/go.crypto/pbkdf2"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
 	"log"
 	"strconv"
-	"code.google.com/p/go.crypto/pbkdf2"
-	"crypto/sha256"
 )
 
 type ActivityTypesGetter interface {

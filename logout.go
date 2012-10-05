@@ -2,8 +2,8 @@ package main
 
 import (
 	"code.google.com/p/gorilla/sessions"
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 type LogoutHandler struct {

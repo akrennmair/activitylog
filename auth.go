@@ -1,13 +1,13 @@
 package main
 
 import (
-	"net/http"
-	"encoding/json"
 	"code.google.com/p/gorilla/sessions"
+	"encoding/json"
+	"net/http"
 )
 
 type AuthenticateHandler struct {
-	Db CredentialsVerifierActivityTypesGetter
+	Db    CredentialsVerifierActivityTypesGetter
 	Store sessions.Store
 }
 
