@@ -331,94 +331,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ListActivityTypes(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, SESSION_NAME)
-	activity_types := []ActivityType{}
-	if user_id, ok := session.Values["UserId"].(int64); ok {
-		activity_types = GetActivityTypesForUser(user_id)
-	}
-
-	if json_data, err := json.Marshal(activity_types); err == nil {
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(json_data)
-	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func GetActivityTypesForUser(user_id int64) (activities []ActivityType) {
-	activities = []ActivityType{}
-
-	rows, err := db.Query("SELECT id, name FROM activity_types WHERE user_id = ? AND active = 1", user_id)
-	if err != nil {
-		log.Printf("db.Query failed: %v", err)
-		return
-	}
-
-	for rows.Next() {
-		var type_id int64
-		var name string
-		if err = rows.Scan(&type_id, &name); err == nil {
-			activities = append(activities, ActivityType{Id: type_id, Name: name})
-		}
-	}
-	return
-}
-
-func TryAuthenticate(w http.ResponseWriter, r *http.Request) {
-	var result AuthResult
-	session, _ := store.Get(r, SESSION_NAME)
-	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
-		result.Authenticated = false
-		result.ErrorMsg = "Authentication failed."
-	} else {
-		if user_id, ok := session.Values["UserId"].(int64); ok {
-			result.Authenticated = true
-			result.Activities = GetActivityTypesForUser(user_id);
-		} else {
-			result.Authenticated = false
-			result.ErrorMsg = "Authentication failed."
-		}
-	}
-
-	log.Printf("TryAuthenticate: %v", result)
-
-	if json_data, err := json.Marshal(result); err == nil {
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(json_data)
-	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func Authenticate(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-
-	var result AuthResult
-	if user_id, ok := VerifyCredentials(username, password); ok {
-		result.Authenticated = true
-		result.Activities = GetActivityTypesForUser(user_id)
-
-		// create new session and store that authentication was successful
-		session, _ := store.Get(r, SESSION_NAME)
-		session.Values["Authenticated"] = true
-		session.Values["UserName"] = username
-		session.Values["UserId"] = user_id
-		session.Save(r, w)
-	} else {
-		result.Authenticated = false
-		result.ErrorMsg = "Authentication failed."
-	}
-
-	if json_data, err := json.Marshal(result); err == nil {
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(json_data)
-	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 func main() {
 	var cfgfile *string = flag.String("config", "", "configuration file")
 	flag.Parse()
@@ -442,20 +354,22 @@ func main() {
 	}
 	defer db.Close()
 
+	dbx := &Database{conn: db}
+
 	store = sessions.NewCookieStore([]byte(auth_key), []byte(enc_key))
 
 	r := pat.New()
 
-	r.Post("/auth/try", http.HandlerFunc(TryAuthenticate))
+	r.Add("POST", "/auth/try", &TryAuthenticateHandler{Db: dbx})
 	r.Post("/auth/signup", http.HandlerFunc(Signup))
 	r.Post("/auth/logout", http.HandlerFunc(Logout))
-	r.Post("/auth", http.HandlerFunc(Authenticate))
+	r.Add("POST", "/auth", &AuthenticateHandler{Db: dbx})
 	r.Post("/activity/add", http.HandlerFunc(AddActivity))
 	r.Get("/activity/list/{page:[0-9]+}", http.HandlerFunc(ListActivities))
 	r.Post("/activity/type/add", http.HandlerFunc(AddActivityType))
 	r.Post("/activity/type/edit", http.HandlerFunc(EditActivityType))
 	r.Post("/activity/type/del", http.HandlerFunc(DeleteActivityType))
-	r.Get("/activity/type/list", http.HandlerFunc(ListActivityTypes))
+	r.Add("GET", "/activity/type/list", &ListActivityTypesHandler{Db: dbx})
 
 	r.Get("/activity/latest", http.HandlerFunc(LatestActivities))
 	r.Add("GET", "/", http.FileServer(http.Dir("htdocs")))
