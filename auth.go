@@ -3,10 +3,12 @@ package main
 import (
 	"net/http"
 	"encoding/json"
+	"code.google.com/p/gorilla/sessions"
 )
 
 type AuthenticateHandler struct {
 	Db ActivityTypesGetter
+	Store sessions.Store
 }
 
 func (h *AuthenticateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +21,7 @@ func (h *AuthenticateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		result.Activities = h.Db.GetActivityTypesForUser(user_id)
 
 		// create new session and store that authentication was successful
-		session, _ := store.Get(r, SESSION_NAME)
+		session, _ := h.Store.Get(r, SESSION_NAME)
 		session.Values["Authenticated"] = true
 		session.Values["UserName"] = username
 		session.Values["UserId"] = user_id

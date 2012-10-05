@@ -1,17 +1,19 @@
 package main
 
 import (
+	"code.google.com/p/gorilla/sessions"
 	"net/http"
 	"fmt"
 )
 
 type LogoutHandler struct {
+	Store sessions.Store
 }
 
 func (h *LogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
-	session, _ := store.Get(r, SESSION_NAME)
+	session, _ := h.Store.Get(r, SESSION_NAME)
 	delete(session.Values, "Authenticated")
 	delete(session.Values, "UserName")
 	delete(session.Values, "UserId")

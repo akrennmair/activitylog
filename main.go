@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	store sessions.Store
 	db    *sql.DB
 )
 
@@ -80,21 +79,21 @@ func main() {
 
 	dbx := &Database{conn: db}
 
-	store = sessions.NewCookieStore([]byte(auth_key), []byte(enc_key))
+	store := sessions.NewCookieStore([]byte(auth_key), []byte(enc_key))
 
 	r := pat.New()
 
-	r.Add("POST", "/auth/try", &TryAuthenticateHandler{Db: dbx})
+	r.Add("POST", "/auth/try", &TryAuthenticateHandler{Db: dbx, Store: store})
 	r.Add("POST", "/auth/signup", &SignupHandler{})
-	r.Add("POST", "/auth/logout", &LogoutHandler{})
-	r.Add("POST", "/auth", &AuthenticateHandler{Db: dbx})
-	r.Add("POST", "/activity/add", &AddActivityHandler{})
-	r.Add("GET",  "/activity/list/{page:[0-9]+}", &ListActivitiesHandler{})
-	r.Add("POST", "/activity/type/add", &AddActivityTypeHandler{})
-	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{})
-	r.Add("POST", "/activity/type/del", &DeleteActivityTypeHandler{})
-	r.Add("GET",  "/activity/type/list", &ListActivityTypesHandler{Db: dbx})
-	r.Add("GET",  "/activity/latest", &LatestActivitiesHandler{})
+	r.Add("POST", "/auth/logout", &LogoutHandler{Store: store})
+	r.Add("POST", "/auth", &AuthenticateHandler{Db: dbx, Store: store})
+	r.Add("POST", "/activity/add", &AddActivityHandler{Store: store})
+	r.Add("GET",  "/activity/list/{page:[0-9]+}", &ListActivitiesHandler{Store: store})
+	r.Add("POST", "/activity/type/add", &AddActivityTypeHandler{Store: store})
+	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{Store: store})
+	r.Add("POST", "/activity/type/del", &DeleteActivityTypeHandler{Store: store})
+	r.Add("GET",  "/activity/type/list", &ListActivityTypesHandler{Db: dbx, Store: store})
+	r.Add("GET",  "/activity/latest", &LatestActivitiesHandler{Store: store})
 	r.Add("GET",  "/", http.FileServer(http.Dir("htdocs")))
 
 	httpsrv := &http.Server{Handler: r, Addr: ":8000"}

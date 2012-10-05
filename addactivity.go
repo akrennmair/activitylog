@@ -6,13 +6,15 @@ import (
 	"log"
 	"fmt"
 	"strconv"
+	"code.google.com/p/gorilla/sessions"
 )
 
 type AddActivityHandler struct {
+	Store sessions.Store
 }
 
 func (h *AddActivityHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, SESSION_NAME)
+	session, _ := h.Store.Get(r, SESSION_NAME)
 	if authenticated, ok := session.Values["Authenticated"].(bool); !ok || !authenticated {
 		http.Error(w, "unauthenticated", http.StatusForbidden)
 		return

@@ -1,16 +1,18 @@
 package main
 
 import (
+	"code.google.com/p/gorilla/sessions"
 	"encoding/json"
 	"net/http"
 )
 
 type ListActivityTypesHandler struct {
 	Db ActivityTypesGetter
+	Store sessions.Store
 }
 
 func (h *ListActivityTypesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, SESSION_NAME)
+	session, _ := h.Store.Get(r, SESSION_NAME)
 	activity_types := []ActivityType{}
 	if user_id, ok := session.Values["UserId"].(int64); ok {
 		activity_types = h.Db.GetActivityTypesForUser(user_id)
