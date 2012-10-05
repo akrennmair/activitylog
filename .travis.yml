@@ -5,3 +5,6 @@ install:
     - go get code.google.com/p/gorilla/pat
     - go get code.google.com/p/gorilla/sessions
     - go get github.com/akrennmair/goconf
+after_script:
+    - go test -v
+    - go test -v -bench='.*'

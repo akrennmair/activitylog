@@ -1,16 +1,10 @@
 PROG:=activities
 GO_SRC:=$(wildcard *.go)
 
-all: $(PROG) test bench
+all: $(PROG)
 
 $(PROG): $(GO_SRC)
 	go build -o $@
-
-test:
-	go test
-
-bench:
-	go test -bench='.*'
 
 clean:
 	$(RM) $(PROG)
