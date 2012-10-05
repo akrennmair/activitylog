@@ -8,6 +8,7 @@ import (
 
 type LatestActivitiesHandler struct {
 	Store sessions.Store
+	Db *Database
 }
 
 func (h *LatestActivitiesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +20,7 @@ func (h *LatestActivitiesHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 
 	user_id := session.Values["UserId"].(int64)
 
-	activities, err := GetActivitiesForUser(user_id, ActivityLimit, 0)
+	activities, err := h.Db.GetActivitiesForUser(user_id, ActivityLimit, 0)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -7,7 +7,7 @@ import (
 )
 
 type AuthenticateHandler struct {
-	Db ActivityTypesGetter
+	Db CredentialsVerifierActivityTypesGetter
 	Store sessions.Store
 }
 
@@ -16,7 +16,7 @@ func (h *AuthenticateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	password := r.FormValue("password")
 
 	var result AuthResult
-	if user_id, ok := VerifyCredentials(username, password); ok {
+	if user_id, ok := h.Db.VerifyCredentials(username, password); ok {
 		result.Authenticated = true
 		result.Activities = h.Db.GetActivityTypesForUser(user_id)
 

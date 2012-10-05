@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"database/sql"
 	"log"
 	"fmt"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 )
 
 type AddActivityHandler struct {
+	Db ActivityAdder
 	Store sessions.Store
 }
 
@@ -23,31 +23,15 @@ func (h *AddActivityHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	username := session.Values["UserName"].(string)
 	user_id := session.Values["UserId"].(int64)
 
-	type_id := r.FormValue("type_id")
+	type_id, _ := strconv.ParseInt(r.FormValue("type_id"), 10, 64)
 	description := r.FormValue("desc")
-	is_public := 0
+	is_public := false
 	if r.FormValue("public") == "on" {
-		is_public = 1
+		is_public = true
 	}
 
-	var err error
-	var latitude sql.NullFloat64
-	var longitude sql.NullFloat64
-
-	if latitude.Float64, err = strconv.ParseFloat(r.FormValue("lat"), 64); err != nil {
-		latitude.Valid = false
-	} else {
-		latitude.Valid = true
-	}
-
-	if longitude.Float64, err = strconv.ParseFloat(r.FormValue("long"), 64); err != nil {
-		longitude.Valid = false
-	} else {
-		longitude.Valid = true
-	}
-
-	if _, err := db.Exec("INSERT INTO activities (type_id, timestamp, description, user_id, public, latitude, longitude) VALUES (?, NOW(), ?, ?, ?, ?, ?)", type_id, description, user_id, is_public, latitude, longitude); err != nil {
-		log.Printf("AddActivity: db.Exec failed: %v", err)
+	if err := h.Db.AddActivity(type_id, description, user_id, is_public, r.FormValue("lat"), r.FormValue("long")); err != nil {
+		log.Printf("AddActivity failed: %v", err)
 	} else {
 		log.Printf("added activity %s (type_id = %s) for user %s", description, type_id, username)
 	}

@@ -9,6 +9,7 @@ import (
 
 type ListActivitiesHandler struct {
 	Store sessions.Store
+	Db *Database
 }
 
 func (h *ListActivitiesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +27,7 @@ func (h *ListActivitiesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	activities, err := GetActivitiesForUser(user_id, ActivityLimit, uint(page-1)*ActivityLimit)
+	activities, err := h.Db.GetActivitiesForUser(user_id, ActivityLimit, uint(page-1)*ActivityLimit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

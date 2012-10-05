@@ -10,6 +10,7 @@ import (
 
 type DeleteActivityTypeHandler struct {
 	Store sessions.Store
+	Db ActivityTypeDeleter
 }
 
 func (h *DeleteActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,9 +26,8 @@ func (h *DeleteActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 
 	log.Printf("delete activity type id %d", activity_type_id);
 
-	_, err := db.Exec("UPDATE activity_types SET active = 0 WHERE user_id = ? AND id = ?", user_id, activity_type_id);
-	if err != nil {
-		log.Printf("db.Exec failed: %v", err)
+	if err := h.Db.DeleteActivityType(user_id, activity_type_id); err != nil {
+		log.Printf("deactivating activity type %d failed: %v", activity_type_id, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

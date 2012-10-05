@@ -2,13 +2,13 @@ package main
 
 import (
 	"net/http"
-	"log"
 	"encoding/json"
 	"code.google.com/p/gorilla/sessions"
 )
 
 type AddActivityTypeHandler struct {
 	Store sessions.Store
+	Db ActivityTypeAdder
 }
 
 func (h *AddActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -19,18 +19,13 @@ func (h *AddActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 
 	user_id := session.Values["UserId"].(int64)
-
 	typename := r.FormValue("typename")
 
-	result, err := db.Exec("INSERT INTO activity_types (name, user_id, active) VALUES (?, ?, 1)", typename, user_id)
+	activity_type, err := h.Db.AddActivityType(typename, user_id)
 	if err != nil {
-		log.Printf("db.Exec failed: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	activity_type := ActivityType{Name: typename}
-	activity_type.Id, _ = result.LastInsertId()
 
 	if json_data, err := json.Marshal(activity_type); err == nil {
 		w.Header().Add("Content-Type", "application/json")

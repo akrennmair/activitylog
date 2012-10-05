@@ -6,6 +6,7 @@ import (
 )
 
 type SignupHandler struct {
+	Db UserRegistrar
 }
 
 func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +15,7 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var result AuthResult
 
-	if err := RegisterUser(username, password); err != nil {
+	if err := h.Db.RegisterUser(username, password); err != nil {
 		result.Authenticated = false
 		result.ErrorMsg = err.Error()
 	} else {

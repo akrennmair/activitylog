@@ -12,10 +12,6 @@ import (
 	"os"
 )
 
-var (
-	db    *sql.DB
-)
-
 
 const (
 	ActivityLimit = 10
@@ -53,7 +49,6 @@ type User struct {
 }
 
 
-
 func main() {
 	var cfgfile *string = flag.String("config", "", "configuration file")
 	flag.Parse()
@@ -71,29 +66,29 @@ func main() {
 	auth_key, _ := cfg.GetString("sessions", "authkey")
 	enc_key, _ := cfg.GetString("sessions", "enckey")
 
-	db, err = sql.Open(driver, dsn)
+	db_handle, err := sql.Open(driver, dsn)
 	if err != nil {
 		log.Fatalf("sql.Open: %v", err)
 	}
-	defer db.Close()
+	defer db_handle.Close()
 
-	dbx := &Database{conn: db}
+	db := &Database{conn: db_handle}
 
 	store := sessions.NewCookieStore([]byte(auth_key), []byte(enc_key))
 
 	r := pat.New()
 
-	r.Add("POST", "/auth/try", &TryAuthenticateHandler{Db: dbx, Store: store})
-	r.Add("POST", "/auth/signup", &SignupHandler{})
+	r.Add("POST", "/auth/try", &TryAuthenticateHandler{Db: db, Store: store})
+	r.Add("POST", "/auth/signup", &SignupHandler{Db: db})
 	r.Add("POST", "/auth/logout", &LogoutHandler{Store: store})
-	r.Add("POST", "/auth", &AuthenticateHandler{Db: dbx, Store: store})
-	r.Add("POST", "/activity/add", &AddActivityHandler{Store: store})
-	r.Add("GET",  "/activity/list/{page:[0-9]+}", &ListActivitiesHandler{Store: store})
-	r.Add("POST", "/activity/type/add", &AddActivityTypeHandler{Store: store})
-	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{Store: store})
-	r.Add("POST", "/activity/type/del", &DeleteActivityTypeHandler{Store: store})
-	r.Add("GET",  "/activity/type/list", &ListActivityTypesHandler{Db: dbx, Store: store})
-	r.Add("GET",  "/activity/latest", &LatestActivitiesHandler{Store: store})
+	r.Add("POST", "/auth", &AuthenticateHandler{Db: db, Store: store})
+	r.Add("POST", "/activity/add", &AddActivityHandler{Store: store, Db: db})
+	r.Add("GET",  "/activity/list/{page:[0-9]+}", &ListActivitiesHandler{Db: db, Store: store})
+	r.Add("POST", "/activity/type/add", &AddActivityTypeHandler{Db: db, Store: store})
+	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{/* Db: db, */Store: store})
+	r.Add("POST", "/activity/type/del", &DeleteActivityTypeHandler{Db: db, Store: store})
+	r.Add("GET",  "/activity/type/list", &ListActivityTypesHandler{Db: db, Store: store})
+	r.Add("GET",  "/activity/latest", &LatestActivitiesHandler{Db: db, Store: store})
 	r.Add("GET",  "/", http.FileServer(http.Dir("htdocs")))
 
 	httpsrv := &http.Server{Handler: r, Addr: ":8000"}
