@@ -80,7 +80,7 @@ func main() {
 	r.Add("POST", "/activity/add", &AddActivityHandler{Store: store, Db: db})
 	r.Add("GET", "/activity/list/{page:[0-9]+}", &ListActivitiesHandler{Db: db, Store: store})
 	r.Add("POST", "/activity/type/add", &AddActivityTypeHandler{Db: db, Store: store})
-	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{ /* Db: db, */ Store: store})
+	r.Add("POST", "/activity/type/edit", &EditActivityTypeHandler{ Db: db, Store: store})
 	r.Add("POST", "/activity/type/del", &DeleteActivityTypeHandler{Db: db, Store: store})
 	r.Add("GET", "/activity/type/list", &ListActivityTypesHandler{Db: db, Store: store})
 	r.Add("GET", "/activity/latest", &LatestActivitiesHandler{Db: db, Store: store})
