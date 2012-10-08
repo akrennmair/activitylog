@@ -147,7 +147,7 @@ func (db *Database) RegisterUser(username, password string) error {
 		return err
 	}
 
-	password_hash := pbkdf2.Key([]byte(password), salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
+	password_hash := HashPassword([]byte(password), salt)
 
 	_, err = db.conn.Exec("INSERT INTO users (login, pwhash, salt) VALUES (?, ?, ?)", username, password_hash, salt)
 	if err != nil {
@@ -167,7 +167,7 @@ func (db *Database) VerifyCredentials(username, password string) (user_id int64,
 		return 0, false
 	}
 
-	password_hash := pbkdf2.Key([]byte(password), salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
+	password_hash := HashPassword([]byte(password), salt)
 
 	return user_id, bytes.Equal(password_hash, db_hash)
 }
@@ -181,4 +181,8 @@ func GenerateSalt() (data []byte, err error) {
 	data = make([]byte, 8)
 	_, err = rand.Read(data)
 	return
+}
+
+func HashPassword(password, salt []byte) []byte {
+	return pbkdf2.Key([]byte(password), salt, PBKDF2_ROUNDS, PBKDF2_SIZE, sha256.New)
 }
