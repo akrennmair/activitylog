@@ -40,7 +40,7 @@ func TestAuthenticateHandler(t *testing.T) {
 
 		mock_db := &MockCredentialsVerifierActivityTypesGetter{}
 
-		handler := &AuthenticateHandler{Db: mock_db, Store: sessions.NewCookieStore([]byte(""))}
+		handler := &AuthenticateHandler{Db: mock_db, Store: sessions.NewCookieStore([]byte("")) }
 
 		resp := NewMockResponseWriter()
 
@@ -48,6 +48,10 @@ func TestAuthenticateHandler(t *testing.T) {
 
 		if resp.StatusCode != td.http_code {
 			t.Errorf("AuthenticateHandler responded with %d (expected: %d)", resp.StatusCode, td.http_code)
+		}
+
+		if len(resp.Header()["Content-Type"]) < 1 || resp.Header()["Content-Type"][0] != "application/json" {
+			t.Errorf("AuthenticateHandler sends wrong Content-Type (%v)",  resp.Header()["Content-Type"][0])
 		}
 
 		data := make(map[string]interface{})
