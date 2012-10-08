@@ -1,21 +1,21 @@
 package main
 
 import (
-	"testing"
 	"bytes"
-	"fmt"
-	"net/http"
 	"code.google.com/p/gorilla/sessions"
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"testing"
 )
 
 type MockCredentialsVerifierActivityTypesGetter struct {
 }
 
 func (db *MockCredentialsVerifierActivityTypesGetter) GetActivityTypesForUser(user_id int64) []ActivityType {
-	return []ActivityType{ 
-		{ Id: 1, Name: "Foobar" },
-		{ Id: 2, Name: "Quux" },
+	return []ActivityType{
+		{Id: 1, Name: "Foobar"},
+		{Id: 2, Name: "Quux"},
 	}
 }
 
@@ -24,17 +24,17 @@ func (db *MockCredentialsVerifierActivityTypesGetter) VerifyCredentials(username
 }
 
 func TestAuthenticateHandler(t *testing.T) {
-	testdata := []struct{
-		auth_data string
-		http_code int
+	testdata := []struct {
+		auth_data            string
+		http_code            int
 		authenticated_result bool
-	} {
-		{ "username=foo&password=bar", http.StatusOK, true },
-		{ "username=invalid&password=invalid", http.StatusOK, false },
+	}{
+		{"username=foo&password=bar", http.StatusOK, true},
+		{"username=invalid&password=invalid", http.StatusOK, false},
 	}
 
 	for _, td := range testdata {
-		req, _ := http.NewRequest("POST", "http://localhost/auth",  bytes.NewBufferString(td.auth_data))
+		req, _ := http.NewRequest("POST", "http://localhost/auth", bytes.NewBufferString(td.auth_data))
 		req.Header["Content-Length"] = []string{fmt.Sprintf("%d", len(td.auth_data))}
 		req.Header["Content-Type"] = []string{"application/x-www-form-urlencoded"}
 
