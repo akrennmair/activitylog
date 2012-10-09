@@ -140,11 +140,31 @@
 			});
 		};
 
+		var add_activity = function(data, f) {
+			$.post('/activity/add', data, f);
+		};
+
+		var show_add_activity_page = function(ctx) {
+			var template = Handlebars.compile($('#tmpl_add_activity').html());
+			$('#add_activity').html(template({activity_types: PageVars.activities}));
+			$('#add_activity #add_activity_btn').click(function(e) {
+				e.preventDefault();
+				var activity_type_id = $('#add_activity_form #activity_type').val();
+				var description = $('#add_activity_form #description').val();
+				var is_public = $('#add_activity_form #public').val();
+				// TODO: also record current location
+				add_activity({ "type_id": activity_type_id, "desc": description, "public": is_public }, function() {
+					ctx.redirect('#/main');
+				});
+			});
+		};
+
 		this.get('#/activity/types/edit', function(ctx) {
 			show_subpage('#edit_activity_types');
 
 			load_activity_types();
 		});
+
 
 		this.get('#/about', function(ctx) {
 			show_page('#about_page');
@@ -172,6 +192,13 @@
 
 				ctx.redirect('#/');
 			});
+		});
+
+		this.get('#/activity/add', function(ctx) {
+				show_page('#main_page');
+				show_subpage('#add_activity');
+
+				show_add_activity_page(ctx);
 		});
 
 		this.post('#/auth', function(ctx) {

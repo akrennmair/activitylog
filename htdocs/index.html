@@ -99,7 +99,7 @@
 							<li class="nav-header">Menu</li>
 							<li></li>
 							<li><a href="#/main">Show Latest Activities</a></li>
-							<li><a href="#">Add Activity</a></li>
+							<li><a href="#/activity/add">Add Activity</a></li>
 							<li><a href="#/activity/types/edit">Edit Activity Types</a></li>
 							<li><a href="#">Statistics</a></li>
 						</ul>
@@ -122,6 +122,8 @@
 				</div>
 				<!-- edit activity types -->
 				<div class="span9 subpage" id="edit_activity_types"></div>
+				<!-- add activity -->
+				<div class="span9 subpage" id="add_activity"></div>
 			</div>
 		</div>
 
@@ -206,6 +208,36 @@
 					{{/each}}
 				</tbody>
 			</table>
+		</script>
+		<script id="tmpl_add_activity" type="text/x-handlebars-template">
+			<form class="horm-horizontal well" id="add_activity_form">
+				<div class="control-group">
+					<label class="control-label" for="activity_type">Activity Type</label>
+					<div class="controls">
+						<select id="activity_type">
+						{{#each activity_types}}
+							<option value="{{this.type_id}}">{{this.name}}</option>
+						{{/each}}
+						</select>
+					</div>
+					<label class="control-label" for="description">Description</label>
+					<div class="controls">
+						<input type="text" class="input-small" id="description" name="description" style="width: 50%" placeholder="Activity description">
+					</div>
+					<div class="controls">
+						<label class="checkbox">
+							<input type="checkbox" id="public"> Activity is public
+						</label>
+					</div>
+					<!-- TODO: add control whether to record current location -->
+				</div>
+				<div class="control-group">
+					<div class="controls">
+						<a class="btn btn-primary btn-small" id="add_activity_btn">Add Activity</a>
+						<a href="#/main" class="btn btn-small">Cancel</a>
+					</div>
+				</div>
+			</form>
 		</script>
 		<script id="tmpl_errormsg" type="text/x-handlebars-template">
 			<div class="alert alert-error">
