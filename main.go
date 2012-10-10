@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 )
 
 const (
@@ -44,6 +45,10 @@ type User struct {
 	Salt     []byte
 }
 
+var (
+	gitRevision string
+)
+
 func main() {
 	var cfgfile *string = flag.String("config", "", "configuration file")
 	flag.Parse()
@@ -52,6 +57,10 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
+
+	log.Printf("this is activities, revision %s", gitRevision)
+	log.Printf("GOMAXPROCS = %d", runtime.GOMAXPROCS(0))
+	log.Printf("NumCPU = %d", runtime.NumCPU())
 
 	cfg, err := goconf.ReadConfigFile(*cfgfile)
 
