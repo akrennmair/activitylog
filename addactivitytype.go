@@ -20,8 +20,9 @@ func (h *AddActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	user_id := session.Values["UserId"].(int64)
 	typename := r.FormValue("typename")
-
-	activity_type, err := h.Db.AddActivityType(typename, user_id)
+	is_timeperiod := (r.FormValue("time_period") == "true")
+	
+	activity_type, err := h.Db.AddActivityType(typename, user_id, is_timeperiod)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

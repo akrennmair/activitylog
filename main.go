@@ -31,6 +31,7 @@ type Activity struct {
 type ActivityType struct {
 	Id   int64  `json:"type_id"`
 	Name string `json:"name"`
+	TimePeriod bool `json:"time_period"`
 }
 
 type AuthResult struct {
@@ -76,7 +77,7 @@ func main() {
 	}
 	defer db_handle.Close()
 
-	db := &Database{conn: db_handle}
+	db := NewDatabase(db_handle)
 
 	store := sessions.NewCookieStore([]byte(auth_key), []byte(enc_key))
 

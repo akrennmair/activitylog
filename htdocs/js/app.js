@@ -127,7 +127,9 @@
 				$('#add_activity_type_btn').click(function(e) {
 					e.preventDefault();
 					var name = $('#at_newname').val();
-					$.post('/activity/type/add', { "typename": name }, function(result) {
+					var is_time_period = $('#is_time_period').is(':checked');
+					console.log('is_time_period = ' + is_time_period);
+					$.post('/activity/type/add', { "typename": name, "time_period": is_time_period }, function(result) {
 						PageVars.activities.push(result);
 						update_activities_map();
 						var tmpl = Handlebars.compile($('#tmpl_activity_type_row').html());

@@ -10,7 +10,7 @@ import (
 
 type EditActivityTypeHandler struct {
 	Store sessions.Store
-	Db    ActivityTypeUpdater
+	Db    ActivityTypeRenamer
 }
 
 func (h *EditActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,7 @@ func (h *EditActivityTypeHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 
 	new_name := r.FormValue("newname")
 
-	err := h.Db.UpdateActivityType(new_name, user_id, activity_type_id)
+	err := h.Db.RenameActivityType(new_name, user_id, activity_type_id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {

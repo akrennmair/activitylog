@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS flags (
 
 -- insert flags
 INSERT INTO flags (name) VALUES ('point_in_time'); -- activity type is a point in time (i.e. timestamp and end_timestamp are equal)
-INSERT INTO flags (name) VALUES ('range_in_time'); -- activity type is a range in time (i.e. end_timestamp is greater than timestamp)
+INSERT INTO flags (name) VALUES ('time_period');   -- activity type is a time period (i.e. end_timestamp is greater than timestamp)
 INSERT INTO flags (name) VALUES ('numeric');       -- activity contains a numeric value in addition to the description
 INSERT INTO flags (name) VALUES ('numeric_rateable'); -- activity contains a numeric value in addition to the description - shown as rating (e.g. 1 to 5 stars)
 

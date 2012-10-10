@@ -3,9 +3,9 @@ package main
 import (
 	"code.google.com/p/gorilla/sessions"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
+	"log"
 )
 
 type AddActivityHandler struct {
@@ -33,7 +33,7 @@ func (h *AddActivityHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h.Db.AddActivity(type_id, description, user_id, is_public, r.FormValue("lat"), r.FormValue("long")); err != nil {
 		log.Printf("AddActivity failed: %v", err)
 	} else {
-		log.Printf("added activity %s (type_id = %s) for user %s", description, type_id, username)
+		log.Printf("added activity %s (type_id = %d) for user %s", description, type_id, username)
 	}
 
 	// TODO: return inserted data as JSON including insert ID
